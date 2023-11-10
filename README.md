@@ -7,7 +7,7 @@
 - Hearth beats over a year in a diagramm overlay
 
 ### ROWING
-+ all 5000 per time
+- ~all 5000 per time~
 - all 10min per distance
 - all 15min per distance
 - multiple datapoints in one graph

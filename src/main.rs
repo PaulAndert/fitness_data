@@ -3,7 +3,8 @@ use clap::Parser;
 
 mod adapters; 
 mod args;
-mod db;
+mod database;
+mod models;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

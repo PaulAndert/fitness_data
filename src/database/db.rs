@@ -1,13 +1,9 @@
 
-use chrono::{DateTime, Local, NaiveDate, Utc, Duration};
+use chrono::{DateTime, Local, Utc, Duration};
 use dotenv::dotenv;
-use sqlx::{Row, FromRow};
+use sqlx::Row;
 use sqlx::mysql::{ MySqlPool, MySqlRow };
 use std::error::Error;
-
-// pub fn parse_to_db(source_type: args::Source, file: String) {
-
-// }
 
 pub async fn create_pool() -> Result<MySqlPool, Box<dyn Error>>{
     dotenv().ok();
@@ -35,6 +31,7 @@ pub async fn is_db_up_to_date(name: &str, last_modified: DateTime<Local>) -> Res
                 return Ok(false);
             }else {
                 // db is NOT up to date
+                _ = update_known_file(pool, name, last_modified).await;
                 return Ok(true);
             }
         },
@@ -54,7 +51,17 @@ async fn add_known_file(pool: MySqlPool, name: &str, last_modified: DateTime<Loc
         .execute(&pool).await;
     Ok(())
 }
+async fn update_known_file(pool: MySqlPool, name: &str, last_modified: DateTime<Local>) -> Result<(), Box<dyn Error>> {
+    let sql = "update known_files set last_modified = ? where name = ?";
+    _ = sqlx::query(sql)
+        .bind(last_modified.format("%Y-%m-%d %H:%M:%S").to_string())
+        .bind(name)
+        .fetch_optional(&pool)
+        .await;
+    Ok(())
+}
 
+#[allow(dead_code)]
 pub async fn reset_known_files() {
     let pool: MySqlPool = match create_pool().await {
         Ok(pool) => { pool },
@@ -63,25 +70,4 @@ pub async fn reset_known_files() {
     _ = sqlx::query("delete from known_files where id > 0")
         .execute(&pool)
         .await;
-}
-
-pub async fn add_concept2_entry(values: Vec<&str>) {
-    let pool: MySqlPool = match create_pool().await {
-        Ok(pool) => { pool },
-        Err(e) => { panic!("{}", e); },
-    };
-    let sql = "insert into concept2 (log_id, work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace, watts) values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    let aa = sqlx::query(sql)
-        .bind(values[0])
-        .bind(values[1].replace("\"", ""))
-        .bind(values[2])
-        .bind(values[4].split(".").next())
-        .bind(values[7])
-        .bind(values[9])
-        .bind(values[10])
-        .bind(values[11].split(".").next())
-        .bind(values[12])
-        .execute(&pool).await;
-
-    println!("{:?}", aa);
 }

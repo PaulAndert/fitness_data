@@ -7,16 +7,20 @@
 - Hearth beats over a year in a diagramm overlay
 
 ### ROWING
-- all 5000 per time
++ all 5000 per time
 - all 10min per distance
 - all 15min per distance
+- multiple datapoints in one graph
+- dynamicaly choose (CLI) what the y-axis contains
 
 ### Walking
 - one map with one date
 - one map with one month
 - one map with all datapoints
 
-### Flags
-// -s / --source :: "apple" / "concept" / "fddb" / ...
-// -t / --type :: "row" / "walk" / ...
-// -w / --workout :: "10min" / "15min" / "5000m" / "2000m" / ...
+### Command Line Arguments
+cargo run -- <Source> <Sport> <Workout>
+
+source: apple, concept, fddb, ...
+Sport: rowing, walking, ...
+Workout: min10, min15, meter5000, meter2000, ...

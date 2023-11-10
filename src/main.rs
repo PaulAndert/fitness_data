@@ -5,7 +5,8 @@ mod adapters;
 mod args;
 mod db;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let now = Instant::now();
     let args = args::Args::parse();
 
@@ -14,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             adapters::apple::main(args);
         },
         Some(args::Source::Concept2) => {
-            adapters::concept2::main(args);
+            adapters::concept2::main(args).await;
         },
         Some(args::Source::Fddb) => {
             // main_fddb(args);

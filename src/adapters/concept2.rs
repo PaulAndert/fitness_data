@@ -1,14 +1,14 @@
 use std::{fs, path::PathBuf};
-use chrono::Utc;
-use chrono::{DateTime, NaiveDate};
+use chrono::{Local, DateTime, NaiveDate};
 use plotters::prelude::*;
 use dotenv::dotenv;
+use sqlx::mysql::MySqlPool;
 
 use crate::args;
 use crate::db;
 
-pub fn main(args: args::Args) {
-    load_data();
+pub async fn main(args: args::Args) {
+    load_data().await;
     match args.sport {
         Some(args::Sport::Rowing) => {
             match args.workout {
@@ -29,37 +29,64 @@ pub fn main(args: args::Args) {
     }
 }
 
-fn load_data() {
+async fn load_data() {
+    // DEV - TODO
+    // db::reset_known_files().await;
+
     dotenv().ok();
     let path: &str = &std::env::var("CONCEPT2_PATH").expect("CONCEPT2_PATH must be set.");
-    println!("{}", path);
+
     let dir_list = fs::read_dir(path).unwrap();
+
     for file_res in dir_list {
-        match file_res {
-            Ok(file) => {
-                match file.metadata() {
-                    Ok(metadata) => {
-                        match metadata.modified() {
-                            Ok(systime) => {
-                                let last_modified: DateTime<Utc> = systime.clone().into();
-                                
-                            },
-                            Err(e)=> {
-                                println!("{:?}", e);
-                            }
-                        }
-                    }
-                    Err(e)=> {
-                        println!("{:?}", e);
-                    }
-                }
+        let file = match file_res {
+            Ok(file) => { file },
+            Err(e) => { panic!("Error: {}", e); },
+        };
+        let metadata = match file.metadata() {
+            Ok(meta) => { meta }
+            Err(e)=> { panic!("Error: {:?}", e); }
+        };
+        let last_modified = match metadata.modified() {
+            Ok(systime) => {
+                let last_modified: DateTime<Local> = systime.clone().into();
+                last_modified
             },
-            Err(e) => {
-                eprintln!("Error: {}", e);
+            Err(e)=> { panic!("Error: {:?}", e); }
+        };
+        let filename = match file.file_name().into_string() {
+            Ok(name) => { name },
+            Err(e) => { panic!("Error: {:?}", e); },
+        };
+        match db::is_db_up_to_date(&filename, last_modified).await {
+            Ok(boo) => { 
+                match boo {
+                    true => { // read new data
+                        read_file(&file).await;
+                    },
+                    false => {}, // skip file
+                }    
             },
-        }
+            Err(e) => { panic!("Error: {:?}", e); },
+        };
     }
     //db::parse_to_db();
+}
+
+async fn read_file(file: &std::fs::DirEntry) {
+    let contents = fs::read_to_string(file.path()).expect("Should have been able to read the file");
+    let mut splits = contents.split("\n");
+    // ignore first line
+    splits.next();
+    for line in splits {
+        let mut values = Vec::new();
+        for value in line.split(",") {
+            values.push(value);
+        }
+        if values.len() > 1 {
+            db::add_concept2_entry(values).await;
+        }
+    }
 }
 
 // //"Log ID",Date,Description,"Work Time (Formatted)","Work Time (Seconds)","Rest Time (Formatted)","Rest Time (Seconds)","Work Distance","Rest Distance","Stroke Rate/Cadence","Stroke Count",Pace,"Avg Watts",Cal/Hour,"Total Cal","Avg Heart Rate","Drag Factor",Age,Weight,Type,Ranked,Comments,"Date Entered"

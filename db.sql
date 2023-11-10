@@ -12,7 +12,8 @@ CREATE TABLE concept2 (
     stroke_rate int,
     stroke_count int,
     pace time,
-    watts int
+    watts int,
+    PRIMARY KEY (log_id)
 ); 
 --Log ID
 --Date
@@ -25,9 +26,10 @@ CREATE TABLE concept2 (
 --"Avg Watts"
 
 CREATE TABLE known_files (
-    id int NOT NULL,
+    id int NOT NULL AUTO_INCREMENT,
     name varchar(255),
-    last_modified timestamp
+    last_modified timestamp,
+    PRIMARY KEY (id)
 ); 
 
 

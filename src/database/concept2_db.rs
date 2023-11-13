@@ -85,7 +85,7 @@ pub async fn reset_concept2() {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
-    _ = sqlx::query("delete from concept2 where log_id > 0")
+    _ = sqlx::query("delete from concept2")
         .execute(&pool)
         .await;
 }

@@ -4,10 +4,11 @@ use chrono::{Local, DateTime, NaiveDate};
 use plotters::prelude::*;
 use dotenv::dotenv;
 
+use crate::common;
 use crate::args;
 use crate::args::YAxis;
-use crate::database::concept2_db::*;
-use crate::database::db::*;
+use crate::database::concept2_db;
+use crate::database::db;
 use crate::models::concept2::Concept2;
 
 pub async fn main(args: args::Args) {
@@ -18,6 +19,7 @@ pub async fn main(args: args::Args) {
     match args.sport {
         Some(args::Sport::Rowing) => {
             match args.workout {
+                // TODO: min1
                 Some(args::Workout::Min1) => { },
                 Some(args::Workout::Min10) => {
                     _ = plot_workout("10:00 row", args.y_axis).await;
@@ -25,7 +27,9 @@ pub async fn main(args: args::Args) {
                 Some(args::Workout::Min15) => {
                     _ = plot_workout("15:00 row", args.y_axis).await;
                 },
+                // TODO: meter1000
                 Some(args::Workout::Meter1000) => { },
+                // TODO: meter2000
                 Some(args::Workout::Meter2000) => { },
                 Some(args::Workout::Meter5000) => { 
                     _ = plot_workout("5000m row", args.y_axis).await;
@@ -69,7 +73,7 @@ async fn load_data() {
             Ok(name) => { name },
             Err(e) => { panic!("Error: {:?}", e); },
         };
-        match is_db_up_to_date(&filename, last_modified).await {
+        match db::is_db_up_to_date(&filename, last_modified).await {
             Ok(boo) => { 
                 match boo {
                     true => { // read new data
@@ -95,38 +99,20 @@ async fn read_file(file: &std::fs::DirEntry) {
             values.push(value);
         }
         if values.len() > 1 {
-            add_concept2_entry(values).await;
+            concept2_db::add_concept2_entry(values).await;
         }
     }
-}
-
-fn get_low_high(data: Vec<(NaiveDate, f32)>) -> (NaiveDate, NaiveDate) {
-    // returns a tuple of the first and last Date from the given Vec of (Date,f32) tuples
-    let mut x_lowest: NaiveDate = data[0].0;
-    let mut x_highest: NaiveDate = data[0].0;
-    for item in data {
-        if item.0 < x_lowest {
-            x_lowest = item.0;
-        }else if item.0 > x_highest {
-            x_highest = item.0;
-        }
-    }
-    // this is so that the graph has some padding to the sides
-    x_lowest = x_lowest.checked_sub_days(chrono::Days::new(3)).unwrap();
-    x_highest = x_highest.checked_add_days(chrono::Days::new(3)).unwrap();
-
-    return (x_lowest, x_highest);
 }
 
 async fn plot_workout(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dyn std::error::Error>> {
     // Creates a Graph with the Data of the given Workout
-    let data = get_concept2_workouts(workout).await;
+    let data = concept2_db::get_concept2_workouts(workout).await;
 
     let datapoints: Vec<(NaiveDate, f32)> = convert_data_to_points(data, y_axis.clone());
     if datapoints.len() < 1 {
         panic!("Error: No Datapoints for that Workout");
     }
-    let (x_lowest, x_highest) = get_low_high(datapoints.clone());
+    let (x_lowest, x_highest) = common::get_low_high(datapoints.clone());
     
     let (title, y_lowest, y_highest): (&str, f32, f32) = get_values(workout, y_axis);
 
@@ -200,7 +186,6 @@ fn get_values(workout: &str, y_axis: Option<YAxis>) -> (&str, f32, f32) {
         }
     }
 }
-
 
 fn convert_data_to_points(data: Vec<Concept2>, y_axis: Option<YAxis>) -> Vec<(NaiveDate, f32)> {
     // Takes a Vec of Cencept2 Structs and returned a Vec of (Date,f32) Tuples

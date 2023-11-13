@@ -3,6 +3,7 @@ use clap::Parser;
 
 mod adapters; 
 mod args;
+mod common;
 mod database;
 mod models;
 
@@ -13,13 +14,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match args.source {
         Some(args::Source::Apple) => {
-            adapters::apple::main(args);
+            adapters::apple::main(args).await;
         },
         Some(args::Source::Concept2) => {
             adapters::concept2::main(args).await;
         },
         Some(args::Source::Fddb) => {
-            // main_fddb(args);
+            adapters::fddb::main().await;
         },
         None => {
             panic!("Error: Unknown Source");

@@ -22,7 +22,9 @@ pub async fn main(args: args::Args) {
                 Some(args::Workout::Min10) => {
                     _ = plot_workout("10:00 row", args.y_axis).await;
                 },
-                Some(args::Workout::Min15) => { },
+                Some(args::Workout::Min15) => {
+                    _ = plot_workout("15:00 row", args.y_axis).await;
+                },
                 Some(args::Workout::Meter1000) => { },
                 Some(args::Workout::Meter2000) => { },
                 Some(args::Workout::Meter5000) => { 
@@ -172,26 +174,24 @@ fn get_values(workout: &str, y_axis: Option<YAxis>) -> (&str, f32, f32) {
             }
         },
         "15:00 row" => {
-            let title: &str = "Rowing 15 min, Distances in Meters";
             match y_axis {
-                // Some(YAxis::Duration) => { (title, 22.0, 24.0) },
-                Some(YAxis::Distance) => { (title, 2000.0, 4000.0) },
-                // Some(YAxis::StrokeRate) => { (title, 22.0, 24.0) },
-                // Some(YAxis::StrokeCount) => { (title, 22.0, 24.0) },
-                // Some(YAxis::Pace) => { },
-                // Some(YAxis::Watts) => { (title, 22.0, 24.0) },
+                Some(YAxis::Duration) => { ("Rowing 15 min, Times in Minutes", 14.0, 16.0) },
+                Some(YAxis::Distance) => { ("Rowing 15 min, Distances in Meters", 2800.0, 3200.0) },
+                Some(YAxis::StrokeRate) => { ("Rowing 15 min, Avg. Strokes per Minute", 13.0, 20.0) },
+                Some(YAxis::StrokeCount) => { ("Rowing 15 min, Strokecount", 200.0, 300.0) },
+                Some(YAxis::Pace) => { ("Rowing 15 min, Avg. Pace (Minutes per 500m)", 2.0, 2.5) },
+                Some(YAxis::Watts) => { ("Rowing 15 min, Avg. Watts", 90.0, 140.0) },
                 _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
             }
         },
         "10:00 row" => {
-            let title: &str = "Rowing 10 min, Distances in Meters";
             match y_axis {
-                // Some(YAxis::Duration) => { (title, 22.0, 24.0) },
-                Some(YAxis::Distance) => { (title, 1800.0, 2400.0) },
-                // Some(YAxis::StrokeRate) => { (title, 22.0, 24.0) },
-                // Some(YAxis::StrokeCount) => { (title, 22.0, 24.0) },
-                // Some(YAxis::Pace) => { },
-                // Some(YAxis::Watts) => { (title, 22.0, 24.0) },
+                Some(YAxis::Duration) => { ("Rowing 10 min, Times in Minutes", 9.0, 11.0) },
+                Some(YAxis::Distance) => { ("Rowing 10 min, Distances in Meters", 1800.0, 2400.0) },
+                Some(YAxis::StrokeRate) => { ("Rowing 10 min, Avg. Strokes per Minute", 15.0, 25.0) },
+                Some(YAxis::StrokeCount) => { ("Rowing 10 min, Strokecount", 150.0, 220.0) },
+                Some(YAxis::Pace) => { ("Rowing 10 min, Avg. Pace (Minutes per 500m)", 2.0, 2.5) },
+                Some(YAxis::Watts) => { ("Rowing 10 min, Avg. Watts", 90.0, 180.0) },
                 _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
             }
         },

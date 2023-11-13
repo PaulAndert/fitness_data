@@ -19,29 +19,35 @@ pub async fn add_concept2_entry(values: Vec<&str>) {
             let aa: i32 = id.get(0);
             println!("ID: {}", aa);
             // update ??
-            "update concept2 set work_date = ?, name = ?, duration_sec = ?, distance = ?, stroke_rate = ?, stroke_count = ?, pace = ?, watts = ? where log_id = ?"
+            "update concept2 set work_date = ?, name = ?, duration_sec = ?, distance = ?, stroke_rate = ?, stroke_count = ?, pace_sec = ?, watts = ? where log_id = ?"
         },
         Ok(None) => {
             // insert
-            "insert into concept2 (work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace, watts, log_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "insert into concept2 (work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace_sec, watts, log_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         },
         Err(e) => {
             // err
             panic!("Error: {}", e);
         }
     };
-    println!("{}", sql);
     _ = sqlx::query(sql)
         .bind(values[1].replace("\"", ""))
         .bind(values[2].replace("\"", ""))
-        .bind(values[4].split(".").next())
+        .bind(values[4])
         .bind(values[7])
         .bind(values[9])
         .bind(values[10])
-        .bind(values[11].split(".").next())
+        .bind(convert_pace(values[11]))
         .bind(values[12])
         .bind(values[0]) // like that so that both insert and update work
         .execute(&pool).await;
+}
+
+fn convert_pace(pace: &str) -> f32 {
+    let pace_split: Vec<&str> = pace.split(":").collect();
+    let minutes: f32 = pace_split[0].parse::<f32>().unwrap();
+    let seconds: f32 = pace_split[1].parse::<f32>().unwrap();
+    minutes * 60.0 + seconds
 }
 
 pub async fn get_concept2_workouts(workout: &str) -> Vec<Concept2> {
@@ -63,15 +69,15 @@ pub async fn get_concept2_workouts(workout: &str) -> Vec<Concept2> {
                 let work_date: DateTime<Local> = row.get("work_date");
                 let name: String = row.get("name");
 
-                let duration_sec: i32 = row.get("duration_sec");
+                let duration_sec: f32 = row.get("duration_sec");
                 let distance: i32 = row.get("distance");
                 let stroke_rate: i32 = row.get("stroke_rate");
 
                 let stroke_count: i32 = row.get("stroke_count");
-                let pace: NaiveTime = row.get("pace");
+                let pace_sec: f32 = row.get("pace_sec");
                 let watts: i32 = row.get("watts");
 
-                all_workouts.push(Concept2::create(log_id, work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace, watts));
+                all_workouts.push(Concept2::create(log_id, work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace_sec, watts));
             }
         },
         Err(e) => { panic!("Error: {}", e); }

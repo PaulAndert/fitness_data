@@ -13,7 +13,7 @@ use crate::models::concept2::Concept2;
 
 pub async fn main(args: args::Args) {
     // TODO: DEV tools
-    // db::reset_known_files().await;
+    // db::reset_files().await;
     // db::reset_concept2().await;
     load_data().await;
     match args.sport {
@@ -154,7 +154,7 @@ fn get_values(workout: &str, y_axis: Option<YAxis>) -> (&str, f32, f32) {
                 Some(YAxis::Distance) => { ("Rowing 5000 meter, Distance in Meter", 4900.0, 5100.0) },
                 Some(YAxis::StrokeRate) => { ("Rowing 5000 meter, Avg. Strokes per Minute", 15.0, 20.0) },
                 Some(YAxis::StrokeCount) => { ("Rowing 5000 meter, Strokecount", 350.0, 450.0) },
-                Some(YAxis::Pace) => { ("Rowing 5000 meter, Avg. Pace (Minutes per 500m)", 2.0, 2.5) },
+                Some(YAxis::Pace) => { ("Rowing 5000 meter, Avg. Pace (Seconds per 500m)", 130.0, 150.0) },
                 Some(YAxis::Watts) => { ("Rowing 5000 meter, Avg. Watts", 100.0, 150.0) },
                 _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
             }
@@ -165,7 +165,7 @@ fn get_values(workout: &str, y_axis: Option<YAxis>) -> (&str, f32, f32) {
                 Some(YAxis::Distance) => { ("Rowing 15 min, Distances in Meters", 2800.0, 3200.0) },
                 Some(YAxis::StrokeRate) => { ("Rowing 15 min, Avg. Strokes per Minute", 13.0, 20.0) },
                 Some(YAxis::StrokeCount) => { ("Rowing 15 min, Strokecount", 200.0, 300.0) },
-                Some(YAxis::Pace) => { ("Rowing 15 min, Avg. Pace (Minutes per 500m)", 2.0, 2.5) },
+                Some(YAxis::Pace) => { ("Rowing 15 min, Avg. Pace (Seconds per 500m)", 130.0, 150.0) },
                 Some(YAxis::Watts) => { ("Rowing 15 min, Avg. Watts", 90.0, 140.0) },
                 _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
             }
@@ -176,7 +176,7 @@ fn get_values(workout: &str, y_axis: Option<YAxis>) -> (&str, f32, f32) {
                 Some(YAxis::Distance) => { ("Rowing 10 min, Distances in Meters", 1800.0, 2400.0) },
                 Some(YAxis::StrokeRate) => { ("Rowing 10 min, Avg. Strokes per Minute", 15.0, 25.0) },
                 Some(YAxis::StrokeCount) => { ("Rowing 10 min, Strokecount", 150.0, 220.0) },
-                Some(YAxis::Pace) => { ("Rowing 10 min, Avg. Pace (Minutes per 500m)", 2.0, 2.5) },
+                Some(YAxis::Pace) => { ("Rowing 10 min, Avg. Pace (Minutes per 500m)", 120.0, 160.0) },
                 Some(YAxis::Watts) => { ("Rowing 10 min, Avg. Watts", 90.0, 180.0) },
                 _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
             }
@@ -203,24 +203,11 @@ fn convert_data_to_points(data: Vec<Concept2>, y_axis: Option<YAxis>) -> Vec<(Na
             data.iter().map(|item| (item.work_date.date_naive(), item.stroke_count as f32)).collect()
         },
         Some(YAxis::Pace) => {
-            data.iter().map(|item| (item.work_date.date_naive(), convert_pace(item.pace))).collect()
+            data.iter().map(|item| (item.work_date.date_naive(), item.pace_sec)).collect()
         },
         Some(YAxis::Watts) => {
             data.iter().map(|item| (item.work_date.date_naive(), item.watts as f32)).collect()
         },
         _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
-    }
-}
-
-fn convert_pace(pace: NaiveTime) -> f32 {
-    // converts Pace from Naivetime to a f32 representation
-    let binding: String = pace.format("%H:%M").to_string();
-    let str_vec: Vec<&str> = binding.split(":").collect();
-
-    if str_vec.len() == 2 {
-        // all minutes normally and seconds with a division by 100 to put it after the comma
-        return str_vec[0].parse::<f32>().unwrap() + str_vec[1].parse::<f32>().unwrap() / 100.0;
-    }else {
-        panic!("Error: Pace is weird: {}", pace);
     }
 }

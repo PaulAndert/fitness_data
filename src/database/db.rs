@@ -19,7 +19,7 @@ pub async fn is_db_up_to_date(name: &str, last_modified: DateTime<Local>) -> Res
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
-    let res: Option<MySqlRow> = sqlx::query(&format!("select last_modified from known_files where name = '{}'", name))
+    let res: Option<MySqlRow> = sqlx::query(&format!("select last_modified from files where name = '{}'", name))
         .fetch_optional(&pool)
         .await?;
     match res {
@@ -44,7 +44,7 @@ pub async fn is_db_up_to_date(name: &str, last_modified: DateTime<Local>) -> Res
 }
 
 async fn add_known_file(pool: MySqlPool, name: &str, last_modified: DateTime<Local>) -> Result<(), Box<dyn Error>> {
-    let sql = "insert into known_files (name, last_modified) values (?, ?)";
+    let sql = "insert into files (name, last_modified) values (?, ?)";
     let _ = sqlx::query(sql)
         .bind(&name)
         .bind(&last_modified.format("%Y-%m-%d %H:%M:%S").to_string())
@@ -52,7 +52,7 @@ async fn add_known_file(pool: MySqlPool, name: &str, last_modified: DateTime<Loc
     Ok(())
 }
 async fn update_known_file(pool: MySqlPool, name: &str, last_modified: DateTime<Local>) -> Result<(), Box<dyn Error>> {
-    let sql = "update known_files set last_modified = ? where name = ?";
+    let sql = "update files set last_modified = ? where name = ?";
     _ = sqlx::query(sql)
         .bind(last_modified.format("%Y-%m-%d %H:%M:%S").to_string())
         .bind(name)
@@ -62,12 +62,12 @@ async fn update_known_file(pool: MySqlPool, name: &str, last_modified: DateTime<
 }
 
 #[allow(dead_code)]
-pub async fn reset_known_files() {
+pub async fn reset_files() {
     let pool: MySqlPool = match create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
-    _ = sqlx::query("delete from known_files where id > 0")
+    _ = sqlx::query("delete from files where id > 0")
         .execute(&pool)
         .await;
 }

@@ -14,6 +14,10 @@ pub struct Args {
     /// Select Workout Type: "minute", "meter", ...
     #[clap(value_enum)]
     pub workout: Option<Workout>,
+
+    /// Select what is displayed on the y-axis: "duration", "distance", "stroke-rate", "stroke-count", "pace", "watts", ...
+    #[clap(value_enum)]
+    pub y_axis: Option<YAxis>,
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -37,4 +41,14 @@ pub enum Workout {
     Meter1000,
     Meter2000,
     Meter5000
+}
+
+#[derive(clap::ValueEnum, Clone, Debug)]
+pub enum YAxis {
+    Duration,
+    Distance,
+    StrokeRate,
+    StrokeCount,
+    Pace,
+    Watts
 }

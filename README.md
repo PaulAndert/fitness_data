@@ -19,8 +19,10 @@
 - one map with all datapoints
 
 ### Command Line Arguments
+Usage: fitness_data [SOURCE] [SPORT] [WORKOUT]
+```terminal
 cargo run -- <Source> <Sport> <Workout>
-
+```
 source: apple, concept, fddb, ...
 Sport: rowing, walking, ...
 Workout: min10, min15, meter5000, meter2000, ...

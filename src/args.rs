@@ -38,9 +38,9 @@ pub enum Workout {
     Min1,
     Min10,
     Min15,
-    Meter1000,
-    Meter2000,
-    Meter5000
+    Meter1k,
+    Meter2k,
+    Meter5k
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]

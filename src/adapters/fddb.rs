@@ -80,7 +80,7 @@ async fn plot_graph() -> Result<(), Box<dyn std::error::Error>> {
         panic!("Error: No Datapoints for that Workout");
     }
     let (x_low, x_high) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
-    let (y_low, y_high) = common::get_y_low_high(datapoints.iter().map(|item| item.1).collect());
+    let (y_low, y_high) = common::get_y_f32_low_high(datapoints.iter().map(|item| item.1).collect());
 
     let root = BitMapBackend::new(&"plots/fddb_weight.png", (2000, 750)).into_drawing_area();
     root.fill(&WHITE)?;

@@ -32,6 +32,7 @@ pub async fn main(args: args::Args) {
                 // TODO: meter2000
                 Some(args::Workout::Meter2000) => { },
                 Some(args::Workout::Meter5000) => { 
+                    //TODO : change name to meter5k, also other meter types
                     _ = plot_workout("5000m row", args.y_axis).await;
                 },
                 None => {
@@ -112,9 +113,10 @@ async fn plot_workout(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dy
     if datapoints.len() < 1 {
         panic!("Error: No Datapoints for that Workout");
     }
-    let (x_lowest, x_highest) = common::get_low_high(datapoints.clone());
-    
-    let (title, y_lowest, y_highest): (&str, f32, f32) = get_values(workout, y_axis);
+
+    let (x_low, x_high) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
+    let (y_low, y_high) = common::get_y_low_high(datapoints.iter().map(|item| item.1).collect());
+    let title = get_title(workout, y_axis);
 
     let path = format!("plots/concept2_{}.png", workout.replace(" ", "_"));
     let root = BitMapBackend::new(&path, (2000, 750)).into_drawing_area();
@@ -124,7 +126,7 @@ async fn plot_workout(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dy
         .margin(15)
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(x_lowest..x_highest, y_lowest..y_highest)?;
+        .build_cartesian_2d(x_low..x_high, y_low..y_high)?;
     chart.configure_mesh().light_line_style(&WHITE).x_label_formatter(&|x| x.to_string()).draw()?;
 
     chart.draw_series(LineSeries::new(
@@ -146,43 +148,43 @@ async fn plot_workout(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dy
     Ok(())
 }
 
-fn get_values(workout: &str, y_axis: Option<YAxis>) -> (&str, f32, f32) {
+fn get_title(workout: &str, y_axis: Option<YAxis>) -> &str {
     match workout {
         "5000m row" => {
             match y_axis {
-                Some(YAxis::Duration) => { ("Rowing 5000 meter, Times in Minutes", 22.0, 24.0) },
-                Some(YAxis::Distance) => { ("Rowing 5000 meter, Distance in Meter", 4900.0, 5100.0) },
-                Some(YAxis::StrokeRate) => { ("Rowing 5000 meter, Avg. Strokes per Minute", 15.0, 20.0) },
-                Some(YAxis::StrokeCount) => { ("Rowing 5000 meter, Strokecount", 350.0, 450.0) },
-                Some(YAxis::Pace) => { ("Rowing 5000 meter, Avg. Pace (Seconds per 500m)", 130.0, 150.0) },
-                Some(YAxis::Watts) => { ("Rowing 5000 meter, Avg. Watts", 100.0, 150.0) },
+                Some(YAxis::Duration) => { "Rowing 5000 meter, Times in Minutes" },
+                Some(YAxis::Distance) => { "Rowing 5000 meter, Distance in Meter" },
+                Some(YAxis::StrokeRate) => { "Rowing 5000 meter, Avg. Strokes per Minute" },
+                Some(YAxis::StrokeCount) => { "Rowing 5000 meter, Strokecount" },
+                Some(YAxis::Pace) => { "Rowing 5000 meter, Avg. Pace (Minutes per 500m)" },
+                Some(YAxis::Watts) => { "Rowing 5000 meter, Avg. Watts" },
                 _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
             }
         },
         "15:00 row" => {
             match y_axis {
-                Some(YAxis::Duration) => { ("Rowing 15 min, Times in Minutes", 14.0, 16.0) },
-                Some(YAxis::Distance) => { ("Rowing 15 min, Distances in Meters", 2800.0, 3200.0) },
-                Some(YAxis::StrokeRate) => { ("Rowing 15 min, Avg. Strokes per Minute", 13.0, 20.0) },
-                Some(YAxis::StrokeCount) => { ("Rowing 15 min, Strokecount", 200.0, 300.0) },
-                Some(YAxis::Pace) => { ("Rowing 15 min, Avg. Pace (Seconds per 500m)", 130.0, 150.0) },
-                Some(YAxis::Watts) => { ("Rowing 15 min, Avg. Watts", 90.0, 140.0) },
+                Some(YAxis::Duration) => { "Rowing 15 min, Times in Minutes" },
+                Some(YAxis::Distance) => { "Rowing 15 min, Distances in Meters" },
+                Some(YAxis::StrokeRate) => { "Rowing 15 min, Avg. Strokes per Minute" },
+                Some(YAxis::StrokeCount) => { "Rowing 15 min, Strokecount" },
+                Some(YAxis::Pace) => { "Rowing 15 min, Avg. Pace (Minutes per 500m)" },
+                Some(YAxis::Watts) => { "Rowing 15 min, Avg. Watts" },
                 _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
             }
         },
         "10:00 row" => {
             match y_axis {
-                Some(YAxis::Duration) => { ("Rowing 10 min, Times in Minutes", 9.0, 11.0) },
-                Some(YAxis::Distance) => { ("Rowing 10 min, Distances in Meters", 1800.0, 2400.0) },
-                Some(YAxis::StrokeRate) => { ("Rowing 10 min, Avg. Strokes per Minute", 15.0, 25.0) },
-                Some(YAxis::StrokeCount) => { ("Rowing 10 min, Strokecount", 150.0, 220.0) },
-                Some(YAxis::Pace) => { ("Rowing 10 min, Avg. Pace (Minutes per 500m)", 120.0, 160.0) },
-                Some(YAxis::Watts) => { ("Rowing 10 min, Avg. Watts", 90.0, 180.0) },
+                Some(YAxis::Duration) => { "Rowing 10 min, Times in Minutes" },
+                Some(YAxis::Distance) => { "Rowing 10 min, Distances in Meters" },
+                Some(YAxis::StrokeRate) => { "Rowing 10 min, Avg. Strokes per Minute" },
+                Some(YAxis::StrokeCount) => { "Rowing 10 min, Strokecount" },
+                Some(YAxis::Pace) => { "Rowing 10 min, Avg. Pace (Minutes per 500m)" },
+                Some(YAxis::Watts) => { "Rowing 10 min, Avg. Watts" },
                 _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
             }
         },
         _ => { 
-            ("Error: Unknown Workout", 0.0, 1.0)
+            "Error: Unknown Workout"
         }
     }
 }
@@ -191,7 +193,7 @@ fn convert_data_to_points(data: Vec<Concept2>, y_axis: Option<YAxis>) -> Vec<(Na
     // Takes a Vec of Cencept2 Structs and returned a Vec of (Date,f32) Tuples
     match y_axis {
         Some(YAxis::Duration) => { 
-            data.iter().map(|item| (item.work_date.date_naive(), item.duration_sec as f32 / 60.0)).collect()
+            data.iter().map(|item| (item.work_date.date_naive(), sec_to_min(item.duration_sec))).collect()
         },
         Some(YAxis::Distance) => { 
             data.iter().map(|item| (item.work_date.date_naive(), item.distance as f32)).collect()
@@ -203,11 +205,15 @@ fn convert_data_to_points(data: Vec<Concept2>, y_axis: Option<YAxis>) -> Vec<(Na
             data.iter().map(|item| (item.work_date.date_naive(), item.stroke_count as f32)).collect()
         },
         Some(YAxis::Pace) => {
-            data.iter().map(|item| (item.work_date.date_naive(), item.pace_sec)).collect()
+            data.iter().map(|item| (item.work_date.date_naive(), sec_to_min(item.pace_sec))).collect()
         },
         Some(YAxis::Watts) => {
             data.iter().map(|item| (item.work_date.date_naive(), item.watts as f32)).collect()
         },
         _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
     }
+}
+
+fn sec_to_min(sec: f32) -> f32 {
+    ((sec / 60.0) as i32) as f32 + (sec % 60.0) / 100.0
 }

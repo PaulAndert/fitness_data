@@ -79,8 +79,9 @@ async fn plot_graph() -> Result<(), Box<dyn std::error::Error>> {
     if datapoints.len() < 1 {
         panic!("Error: No Datapoints for that Workout");
     }
-    let (x_lowest, x_highest) = common::get_low_high(datapoints.clone());
+    let (x_lowest, x_highest) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
     
+    // TODO: y axis dynamically 
     let y_lowest:f32 = 95.0;
     let y_highest: f32 = 112.0;
 
@@ -108,6 +109,7 @@ async fn plot_graph() -> Result<(), Box<dyn std::error::Error>> {
             + Text::new("", (10, 0), ("sans-serif", 25).into_font());
         },
     ))?;
+    //TODO: mark highest and lowest points in graph with text value, and maybe other note-worthy metrics
     root.present()?;
 
     Ok(())

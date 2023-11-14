@@ -22,7 +22,6 @@ CREATE TABLE concept2 (
     watts int,
     PRIMARY KEY (log_id)
 );
---duration, pace
 
 CREATE TABLE fddb (
     work_date date,

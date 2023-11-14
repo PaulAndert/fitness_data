@@ -79,11 +79,8 @@ async fn plot_graph() -> Result<(), Box<dyn std::error::Error>> {
     if datapoints.len() < 1 {
         panic!("Error: No Datapoints for that Workout");
     }
-    let (x_lowest, x_highest) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
-    
-    // TODO: y axis dynamically 
-    let y_lowest:f32 = 95.0;
-    let y_highest: f32 = 112.0;
+    let (x_low, x_high) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
+    let (y_low, y_high) = common::get_y_low_high(datapoints.iter().map(|item| item.1).collect());
 
     let root = BitMapBackend::new(&"plots/fddb_weight.png", (2000, 750)).into_drawing_area();
     root.fill(&WHITE)?;
@@ -92,7 +89,7 @@ async fn plot_graph() -> Result<(), Box<dyn std::error::Error>> {
         .margin(15)
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(x_lowest..x_highest, y_lowest..y_highest)?;
+        .build_cartesian_2d(x_low..x_high, y_low..y_high)?;
     chart.configure_mesh().light_line_style(&WHITE).x_label_formatter(&|x| x.to_string()).draw()?;
 
     chart.draw_series(LineSeries::new(

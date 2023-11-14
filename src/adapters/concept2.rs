@@ -1,5 +1,4 @@
 use std::fs;
-use chrono::NaiveTime;
 use chrono::{Local, DateTime, NaiveDate};
 use plotters::prelude::*;
 use dotenv::dotenv;
@@ -12,9 +11,6 @@ use crate::database::db;
 use crate::models::concept2::Concept2;
 
 pub async fn main(args: args::Args) {
-    // TODO: DEV tools
-    // db::reset_files().await;
-    // db::reset_concept2().await;
     load_data().await;
     match args.sport {
         Some(args::Sport::Rowing) => {

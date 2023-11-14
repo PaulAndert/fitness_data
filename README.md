@@ -8,8 +8,8 @@
 
 ### ROWING
 - ~all 5000 per time~
-- all 10min per distance
-- all 15min per distance
+- ~all 10min per distance~
+- ~all 15min per distance~
 - multiple datapoints in one graph
 - dynamicaly choose (CLI) what the y-axis contains
 
@@ -23,6 +23,6 @@ Usage: fitness_data [SOURCE] [SPORT] [WORKOUT]
 ```terminal
 cargo run -- <Source> <Sport> <Workout>
 ```
-source: apple, concept, fddb, ...
-Sport: rowing, walking, ...
-Workout: min10, min15, meter5000, meter2000, ...
+source: apple, concept, fddb, ...  
+Sport: rowing, walking, ...  
+Workout: min10, min15, meter5000, meter2000, ...  

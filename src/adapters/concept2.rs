@@ -1,5 +1,5 @@
 use std::fs;
-use chrono::{NaiveTime, Duration, TimeZone, ParseError};
+use chrono::Duration;
 use chrono::{Local, DateTime, NaiveDate};
 use plotters::prelude::*;
 use dotenv::dotenv;
@@ -337,8 +337,4 @@ fn convert_data_to_points_duration(data: Vec<Concept2>, y_axis: Option<YAxis>) -
         },
         _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
     }
-}
-
-fn sec_to_min(sec: f32) -> f32 {
-    ((sec / 60.0) as i32) as f32 + (sec % 60.0) / 100.0
 }

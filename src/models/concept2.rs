@@ -17,10 +17,10 @@ impl Concept2 {
     pub fn create(log_id: i32, work_date: DateTime<Local>, name: String, duration_sec: f32,
             distance: i32, stroke_rate: i32, stroke_count: i32, pace_sec: f32, watts: i32) -> Concept2 {
 
-        let mut pace = Duration::seconds(pace_sec as i64);
+        let pace = Duration::seconds(pace_sec as i64);
         pace.checked_add(&Duration::milliseconds((pace_sec * 100.0 % 100.0) as i64)).unwrap();
 
-        let mut duration = Duration::seconds(duration_sec as i64);
+        let duration = Duration::seconds(duration_sec as i64);
         duration.checked_add(&Duration::milliseconds((duration_sec * 100.0 % 100.0) as i64)).unwrap();
         
         return Concept2 { 

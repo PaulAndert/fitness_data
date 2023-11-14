@@ -1,4 +1,4 @@
-use chrono::{Local, DateTime, NaiveTime};
+use chrono::{Local, DateTime};
 use sqlx::{MySqlPool, Row};
 
 use crate::database::db::*;

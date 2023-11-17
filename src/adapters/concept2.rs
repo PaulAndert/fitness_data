@@ -175,7 +175,9 @@ async fn graph_f32(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dyn s
     }
 
     let (x_low, x_high) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
-    let (y_low, y_high) = common::get_y_f32_low_high(datapoints.iter().map(|item| item.1).collect());
+
+    let (y_low_date, y_low_val): (NaiveDate, f32) = common::get_y_low::<f32>(datapoints.clone());
+    let (y_high_date, y_high_val): (NaiveDate, f32) = common::get_y_high::<f32>(datapoints.clone());
 
     let title = get_title(workout, y_axis);
 
@@ -187,7 +189,7 @@ async fn graph_f32(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dyn s
         .margin(15)
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(x_low..x_high, y_low..y_high)?;
+        .build_cartesian_2d(x_low..x_high, (y_low_val * 0.95)..(y_high_val * 1.05))?;
     chart.configure_mesh()
         .light_line_style(&WHITE)
         .y_label_formatter(&|y| y.to_string())
@@ -205,7 +207,7 @@ async fn graph_f32(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dyn s
         &|c, s, st| {
             return EmptyElement::at(c)
             + Circle::new((0,0),s,st.filled())
-            + Text::new(format!("{:.2}", c.1), (10, 0), ("sans-serif", 25).into_font());
+            + Text::new("", (10, 0), ("sans-serif", 25).into_font());
         },
     ))?;
     root.present()?;
@@ -326,6 +328,7 @@ fn convert_data_to_points_f32(data: Vec<Concept2>, y_axis: Option<YAxis>) -> Vec
         _ => { panic!("Error: no y-axis specified. {:?}", y_axis); }
     }
 }
+
 fn convert_data_to_points_duration(data: Vec<Concept2>, y_axis: Option<YAxis>) -> Vec<(NaiveDate, Duration)> {
     // Takes a Vec of Cencept2 Structs and returned a Vec of (Date,Duration) Tuples
     match y_axis {

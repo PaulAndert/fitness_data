@@ -10,7 +10,7 @@
 - ~all 5000 per time~
 - ~all 10min per distance~
 - ~all 15min per distance~
-- multiple datapoints in one graph
+- multiple datapoints in one graph (https://plotters-rs.github.io/book/basic/basic_data_plotting.html#multiple-data-series)
 - dynamicaly choose (CLI) what the y-axis contains
 
 ### Walking

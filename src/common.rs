@@ -53,3 +53,28 @@ pub fn get_y_f32_low_high(data: Vec<f32>) -> (f32, f32) {
 
     return (y_low, y_high);
 }
+
+
+pub fn get_y_low<T: PartialOrd + Copy>(data: Vec<(NaiveDate, T)>) -> (NaiveDate, T) {
+    let mut y_low_date: NaiveDate = data[0].0;
+    let mut y_low_val: T = data[0].1;
+    for item in data {
+        if item.1 < y_low_val {
+            y_low_date = item.0;
+            y_low_val = item.1;
+        }
+    }
+    return (y_low_date, y_low_val);
+}
+
+pub fn get_y_high<T: PartialOrd + Copy>(data: Vec<(NaiveDate, T)>) -> (NaiveDate, T){
+    let mut y_high_date: NaiveDate = data[0].0;
+    let mut y_high_val: T = data[0].1;
+    for item in data {
+        if item.1 > y_high_val {
+            y_high_date = item.0;
+            y_high_val = item.1;
+        }
+    }
+    return (y_high_date, y_high_val);
+}

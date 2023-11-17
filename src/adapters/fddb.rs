@@ -80,7 +80,9 @@ async fn plot_graph() -> Result<(), Box<dyn std::error::Error>> {
         panic!("Error: No Datapoints for that Workout");
     }
     let (x_low, x_high) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
-    let (y_low, y_high) = common::get_y_f32_low_high(datapoints.iter().map(|item| item.1).collect());
+
+    let (y_low_date, y_low_val): (NaiveDate, f32) = common::get_y_low::<f32>(datapoints.clone());
+    let (y_high_date, y_high_val): (NaiveDate, f32) = common::get_y_high::<f32>(datapoints.clone());
 
     let root = BitMapBackend::new(&"plots/fddb_weight.png", (2000, 750)).into_drawing_area();
     root.fill(&WHITE)?;
@@ -89,13 +91,15 @@ async fn plot_graph() -> Result<(), Box<dyn std::error::Error>> {
         .margin(15)
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(x_low..x_high, y_low..y_high)?;
+        .build_cartesian_2d(x_low..x_high, (y_low_val * 0.95)..(y_high_val * 1.05))?;
     chart.configure_mesh().light_line_style(&WHITE).x_label_formatter(&|x| x.to_string()).draw()?;
 
+    // Draw Line
     chart.draw_series(LineSeries::new(
         datapoints.clone(),
         &RED,
     ))?;
+    // Draw Points
     chart.draw_series(PointSeries::of_element(
         datapoints,
         5,
@@ -106,7 +110,30 @@ async fn plot_graph() -> Result<(), Box<dyn std::error::Error>> {
             + Text::new("", (10, 0), ("sans-serif", 25).into_font());
         },
     ))?;
-    //TODO: mark highest and lowest points in graph with text value, and maybe other note-worthy metrics
+    
+    // Draw highest Point
+    chart.draw_series(PointSeries::of_element(
+        vec![(y_high_date, y_high_val)],
+        5,
+        &BLUE,
+        &|c, s, st| {
+            return EmptyElement::at(c)
+            + Circle::new((0,0),s,st.filled())
+            + Text::new(format!("{:.2}", y_high_val), (0, -25), ("sans-serif", 25).into_font());
+        },
+    ))?;
+    // Draw lowest Point
+    chart.draw_series(PointSeries::of_element(
+        vec![(y_low_date, y_low_val)],
+        5,
+        &GREEN,
+        &|c, s, st| {
+            return EmptyElement::at(c)
+            + Circle::new((0,0),s,st.filled())
+            + Text::new(format!("{:.2}", y_low_val), (0, 10), ("sans-serif", 25).into_font());
+        },
+    ))?;    
+    
     root.present()?;
 
     Ok(())

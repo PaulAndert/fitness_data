@@ -2,10 +2,12 @@ use std::time::Instant;
 use clap::Parser;
 
 mod adapters; 
-mod args;
-mod common;
 mod database;
 mod models;
+
+mod args;
+mod common;
+mod graph;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

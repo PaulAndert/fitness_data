@@ -129,7 +129,11 @@ async fn graph_duration(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<
     }
 
     let (x_low, x_high) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
-    let (y_low, y_high) = common::get_y_duration_low_high(datapoints.iter().map(|item| item.1).collect());
+    
+    let (y_low_date, y_low_val): (NaiveDate, Duration) = common::get_y_low::<Duration>(datapoints.clone());
+    let (y_high_date, y_high_val): (NaiveDate, Duration) = common::get_y_high::<Duration>(datapoints.clone());
+    let y_low_bound = Duration::seconds((y_low_val.num_seconds() as f32 * 0.95) as i64);
+    let y_high_bound = Duration::seconds((y_high_val.num_seconds() as f32 * 1.05) as i64);
 
     let title = get_title(workout, y_axis);
 
@@ -141,17 +145,19 @@ async fn graph_duration(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<
         .margin(15)
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(x_low..x_high, y_low..y_high)?;
+        .build_cartesian_2d(x_low..x_high, y_low_bound..y_high_bound)?;
     chart.configure_mesh()
         .light_line_style(&WHITE)
         .y_label_formatter(&|y| format!("{:02}: {:02}. {}", y.num_minutes(), y.num_seconds() % 60, get_mili_string(y.num_milliseconds())))
         .x_label_formatter(&|x| x.format("%d.%m.%Y").to_string())
         .draw()?;
 
+    // Draw Line
     chart.draw_series(LineSeries::new(
         datapoints.clone(),
         &RED,
     ))?;
+    // Draw Points
     chart.draw_series(PointSeries::of_element(
         datapoints,
         5,
@@ -159,9 +165,32 @@ async fn graph_duration(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<
         &|c, s, st| {
             return EmptyElement::at(c)
             + Circle::new((0,0),s,st.filled())
-            + Text::new(format!("{}", format!("{:02}: {:02}. {}", c.1.num_minutes(), c.1.num_seconds() % 60, get_mili_string(c.1.num_milliseconds()))), (10, 0), ("sans-serif", 25).into_font());
+            + Text::new("", (10, 0), ("sans-serif", 25).into_font());
         },
     ))?;
+
+    // Draw highest Point
+    chart.draw_series(PointSeries::of_element(
+        vec![(y_high_date, y_high_val)],
+        5,
+        &BLUE,
+        &|c, s, st| {
+            return EmptyElement::at(c)
+            + Circle::new((0,0),s,st.filled())
+            + Text::new(format!("{:02}: {:02}. {}", y_low_val.num_minutes(), y_low_val.num_seconds() % 60, get_mili_string(y_low_val.num_milliseconds())), (0, -25), ("sans-serif", 25).into_font());
+        },
+    ))?;
+    // Draw lowest Point
+    chart.draw_series(PointSeries::of_element(
+        vec![(y_low_date, y_low_val)],
+        5,
+        &GREEN,
+        &|c, s, st| {
+            return EmptyElement::at(c)
+            + Circle::new((0,0),s,st.filled())
+            + Text::new(format!("{:02}: {:02}. {}", y_high_val.num_minutes(), y_high_val.num_seconds() % 60, get_mili_string(y_high_val.num_milliseconds())), (0, 10), ("sans-serif", 25).into_font());
+        },
+    ))?;  
     root.present()?;
     Ok(())
 }
@@ -182,7 +211,7 @@ async fn graph_f32(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dyn s
     let title = get_title(workout, y_axis);
 
     let path = format!("plots/concept2_{}.png", workout.replace(" ", "_"));
-    let root = BitMapBackend::new(&path, (2000, 750)).into_drawing_area();
+    let root: DrawingArea<BitMapBackend<'_>, plotters::coord::Shift> = BitMapBackend::new(&path, (2000, 750)).into_drawing_area();
     root.fill(&WHITE)?;
     let mut chart = ChartBuilder::on(&root)
         .caption(title, ("sans-serif", 50).into_font())
@@ -196,10 +225,12 @@ async fn graph_f32(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dyn s
         .x_label_formatter(&|x| x.format("%d.%m.%Y").to_string())
         .draw()?;
 
+    // Draw Line
     chart.draw_series(LineSeries::new(
         datapoints.clone(),
         &RED,
     ))?;
+    // Draw Points
     chart.draw_series(PointSeries::of_element(
         datapoints,
         5,
@@ -210,6 +241,29 @@ async fn graph_f32(workout: &str, y_axis: Option<YAxis>) -> Result<(), Box<dyn s
             + Text::new("", (10, 0), ("sans-serif", 25).into_font());
         },
     ))?;
+
+    // Draw highest Point
+    chart.draw_series(PointSeries::of_element(
+        vec![(y_high_date, y_high_val)],
+        5,
+        &BLUE,
+        &|c, s, st| {
+            return EmptyElement::at(c)
+            + Circle::new((0,0),s,st.filled())
+            + Text::new(format!("{:.2}", y_high_val), (0, -25), ("sans-serif", 25).into_font());
+        },
+    ))?;
+    // Draw lowest Point
+    chart.draw_series(PointSeries::of_element(
+        vec![(y_low_date, y_low_val)],
+        5,
+        &GREEN,
+        &|c, s, st| {
+            return EmptyElement::at(c)
+            + Circle::new((0,0),s,st.filled())
+            + Text::new(format!("{:.2}", y_low_val), (0, 10), ("sans-serif", 25).into_font());
+        },
+    ))?;  
     root.present()?;
     Ok(())
 }

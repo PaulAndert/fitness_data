@@ -1,6 +1,6 @@
 use chrono::{Duration, NaiveDate};
 use plotters::prelude::*;
-use crate::common;
+use crate::helper::common;
 
 pub async fn graph_duration(destination: String, datapoints: Vec<(NaiveDate, Duration)>, title: &str) -> Result<(), Box<dyn std::error::Error>> {
 

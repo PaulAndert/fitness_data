@@ -4,10 +4,9 @@ use clap::Parser;
 mod adapters; 
 mod database;
 mod models;
+mod helper;
 
-mod args;
-mod common;
-mod graph;
+use helper::args;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,13 +14,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = args::Args::parse();
 
     match args.source {
-        Some(args::Source::Apple) => {
+        Some(helper::args::Source::Apple) => {
             adapters::apple::main(args).await;
         },
-        Some(args::Source::Concept2) => {
+        Some(helper::args::Source::Concept2) => {
             adapters::concept2::main(args).await;
         },
-        Some(args::Source::Fddb) => {
+        Some(helper::args::Source::Fddb) => {
             adapters::fddb::main().await;
         },
         None => {

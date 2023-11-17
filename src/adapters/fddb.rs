@@ -2,9 +2,9 @@ use std::fs;
 use chrono::{Local, DateTime, NaiveDate};
 use dotenv::dotenv;
 
+use crate::helper::graph::graph_f32;
 use crate::database::db;
 use crate::database::fddb_db;
-use crate::graph::graph_f32;
 use crate::models::fddb::Fddb;
 
 pub async fn main() {

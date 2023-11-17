@@ -3,11 +3,11 @@ use chrono::Duration;
 use chrono::{Local, DateTime, NaiveDate};
 use dotenv::dotenv;
 
-use crate::args;
-use crate::args::YAxis;
+use crate::helper::args;
+use crate::helper::args::YAxis;
+use crate::helper::graph::{graph_duration, graph_f32};
 use crate::database::concept2_db;
 use crate::database::db;
-use crate::graph::{graph_duration, graph_f32};
 use crate::models::concept2::Concept2;
 
 pub async fn main(args: args::Args) {

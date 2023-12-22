@@ -1,5 +1,9 @@
 # Fitness
-Rust Project that generates Graphs to track progress. Possible Imports are currently: Apple Fitness, Concept2 RowErg Data and Fddb Weight Data.
+Rust Project that generates Graphs to track progress.  
+Current Data Sources are: 
+- Apple Fitness
+- Concept2 RowErg Data
+- Fddb Weight Data
 
 ### Usage
 fitness_data [SOURCE] [SPORT] [WORKOUT] [Y-Axis]

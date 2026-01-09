@@ -1,52 +1,64 @@
 use chrono::NaiveDate;
-use sqlx::{MySqlPool, Row};
+use sqlx::{MySqlPool, Row, query};
 
 use crate::database::db::*;
 use crate::models::fddb::*;
 
-pub async fn add_fddb_entry(values: Vec<&str>) {
+pub async fn add_fddb_entries(all_values: Vec<Vec<&str>>) {
     let pool: MySqlPool = match create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
-    // convert the DE Date to a US Date
-    let de_date = values[0].replace("\"", "");
-    let date_split: Vec<&str> = de_date.split(".").collect();
-    let us_date = format!("{}-{}-{}", date_split[2], date_split[1], date_split[0]);
+    if all_values.len() == 0 {
+        return;
+    }
 
-    let sql = "select work_date from fddb where work_date = ?";
-    let log_id = sqlx::query(sql)
-        .bind(us_date.clone())
-        .fetch_optional(&pool)
-        .await;
-    let sql = match log_id {
-        Ok(Some(_)) => {
-            // update
-            "update fddb set weight = ? where work_date = ?"
-        },
-        Ok(None) => {
-            // insert
-            "insert into fddb (weight, work_date) values (?, ?)"
-        },
-        Err(e) => {
-            // err
-            panic!("Error: {}", e);
-        }
-    };
-    _ = sqlx::query(sql)
-        .bind(values[1].replace("\"", "").replace(",", ".")) // like that so that both insert and update work
-        .bind(us_date)
+    let mut query: String = String::from("INSERT INTO fddb (work_date, weight) VALUES ");
+    
+    for values in all_values {
+        // convert the DE Date to a US Date
+        let work_date: NaiveDate = match NaiveDate::parse_from_str(&values[0].replace("\"", ""), "%d.%m.%Y") {
+            Ok(date) => date,
+            Err(e) => panic!("The Date specified is either invalid or in the wrong format: {}\n{}", values[0].replace("\"", ""), e)
+        };
+
+        query += &format!("('{}', '{}'), ", work_date.format("%y-%m-%d").to_string(), values[1].replace("\"", ""));
+    }
+
+    query.truncate(query.len() - 2);
+    query += " AS NEW ON DUPLICATE KEY UPDATE work_date = NEW.work_date;";
+
+    println!("{}", query);
+
+    let a = sqlx::query(&query)
         .execute(&pool).await;
+    println!("{:?}", a);
 }
 
-pub async fn get_fddb_data() -> Vec<Fddb> {
+pub async fn get_fddb_data(range_start: Option<NaiveDate>, range_end: Option<NaiveDate>) -> Vec<Fddb> {
     let mut all_data: Vec<Fddb> = Vec::new();
     let pool: MySqlPool = match create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
 
-    let rows_opt = sqlx::query("select * from fddb")
+    let mut query = String::from("SELECT * FROM fddb");
+    match range_start {
+        Some(date) => query = format!("{} WHERE work_date >= '{}'", query, date.format("%Y-%m-%d").to_string()),
+        None => {}
+    };
+    match range_end {
+        Some(date) => {
+            if query.contains("WHERE") {
+                query = format!("{} AND work_date <= '{}'", query, date.format("%Y-%m-%d").to_string())
+            } else {
+                query = format!("{} WHERE work_date <= '{}'", query, date.format("%Y-%m-%d").to_string())
+            }
+        },
+        None => {}
+    };
+
+    let rows_opt = sqlx::query(&query)
         .fetch_all(&pool)
         .await;
 

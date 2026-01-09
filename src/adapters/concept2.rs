@@ -10,38 +10,38 @@ use crate::database::concept2_db;
 use crate::database::db;
 use crate::models::concept2::Concept2;
 
-pub async fn main(args: args::Args) {
+pub async fn main() {
     load_data().await;
-    match args.sport {
-        Some(args::Sport::Rowing) => {
-            match args.workout {
-                Some(args::Workout::Min1) => {
-                    _ = plot_workout("1:00 row", args.y_axis).await;
-                },
-                Some(args::Workout::Min10) => {
-                    _ = plot_workout("10:00 row", args.y_axis).await;
-                },
-                Some(args::Workout::Min15) => {
-                    _ = plot_workout("15:00 row", args.y_axis).await;
-                },
-                Some(args::Workout::Meter1k) => {
-                    _ = plot_workout("1000m row", args.y_axis).await;
-                },
-                Some(args::Workout::Meter2k) => {
-                    _ = plot_workout("2000m row", args.y_axis).await;
-                },
-                Some(args::Workout::Meter5k) => { 
-                    _ = plot_workout("5000m row", args.y_axis).await;
-                },
-                None => {
-                    panic!("Error: Unknown Workout");
-                }
-            }
-        },
-        _ => {
-            panic!("Error: Unknown Sport");
-        }
-    }
+    // match args.sport {
+    //     Some(args::Sport::Rowing) => {
+    //         match args.workout {
+    //             Some(args::Workout::Min1) => {
+    //                 _ = plot_workout("1:00 row", args.y_axis).await;
+    //             },
+    //             Some(args::Workout::Min10) => {
+    //                 _ = plot_workout("10:00 row", args.y_axis).await;
+    //             },
+    //             Some(args::Workout::Min15) => {
+    //                 _ = plot_workout("15:00 row", args.y_axis).await;
+    //             },
+    //             Some(args::Workout::Meter1k) => {
+    //                 _ = plot_workout("1000m row", args.y_axis).await;
+    //             },
+    //             Some(args::Workout::Meter2k) => {
+    //                 _ = plot_workout("2000m row", args.y_axis).await;
+    //             },
+    //             Some(args::Workout::Meter5k) => { 
+    //                 _ = plot_workout("5000m row", args.y_axis).await;
+    //             },
+    //             None => {
+    //                 panic!("Error: Unknown Workout");
+    //             }
+    //         }
+    //     },
+    //     _ => {
+    //         panic!("Error: Unknown Sport");
+    //     }
+    // }
 }
 
 async fn load_data() {
@@ -75,10 +75,8 @@ async fn load_data() {
         match db::is_db_up_to_date(&filename, last_modified).await {
             Ok(boo) => { 
                 match boo {
-                    true => { // read new data
-                        read_file(&file).await;
-                    },
-                    false => { }, // skip file
+                    true => {}, // skip
+                    false => read_file(&file).await // read new data
                 }    
             },
             Err(e) => { panic!("Error: {:?}", e); },

@@ -6,17 +6,17 @@
 
 use crate::helper::args;
 
-pub async fn main(args: args::Args) {
+pub async fn main() {
     // load_data();
-    match args.sport {
-        Some(args::Sport::Rowing) => {
-            //rowing(args);
-        },
-        Some(args::Sport::Walking) => { },
-        None => {
-            panic!("Error: Unknown Sport");
-        }
-    }
+    // match args.sport {
+    //     Some(args::Sport::Rowing) => {
+    //         //rowing(args);
+    //     },
+    //     Some(args::Sport::Walking) => { },
+    //     None => {
+    //         panic!("Error: Unknown Sport");
+    //     }
+    // }
 }
 
 // fn load_data() {

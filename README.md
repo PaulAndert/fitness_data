@@ -5,7 +5,17 @@ Current Data Sources are:
 - Concept2 RowErg Data
 - Fddb Weight Data
 
-### Usage
+## Installation
+```console
+git clone https://github.com/PaulAndert/fitness_data.git
+cd fitness_data
+cargo build
+```
+
+## Setup
+modify the .env_example to .env and change to values inside to match your environment
+
+## Usage
 fitness_data [SOURCE] [SPORT] [WORKOUT] [Y-Axis]
 ```terminal
 cargo run -- <Source> <Sport> <Workout> <Y-Axis>
@@ -14,8 +24,11 @@ source: apple, concept, fddb, ...
 Sport: rowing, walking, ...  
 Workout: min10, min15, meter5000, meter2000, ...  
 Y-Axis: duration, distance, stroke-rate, stroke-count, pace, watts, ... (what value is on this Axis, X-Axis is always time)
-
-### What to do
+> Fddb can only do one thing, so stating only the source is enough
+  
+  
+---
+## TODO
 - alle routen auf map visualisieren (Heatmap, ...)
 - all row in diagramm
 - all walk in diagramm

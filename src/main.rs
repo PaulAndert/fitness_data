@@ -1,30 +1,35 @@
 use std::time::Instant;
-use clap::Parser;
+use dotenv::dotenv;
 
 mod adapters; 
 mod database;
 mod models;
 mod helper;
 
-use helper::args;
+use crate::helper::io_helper::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+// async fn main() -> Result<()> {
     let now = Instant::now();
-    let args = args::Args::parse();
 
-    match args.source {
-        Some(helper::args::Source::Apple) => {
-            adapters::apple::main(args).await;
-        },
-        Some(helper::args::Source::Concept2) => {
-            adapters::concept2::main(args).await;
-        },
-        Some(helper::args::Source::Fddb) => {
+    dotenv().ok();
+
+    let options: Vec<&str> = vec!["Fddb", "Concept 2", "Apple"];
+    let answer: usize = ask_choice_question("What source would you like to graph? (1, 2, 3, ...)", options);
+
+    match answer {
+        1 => {
             adapters::fddb::main().await;
         },
-        None => {
-            panic!("Error: Unknown Source");
+        2 => {
+            adapters::concept2::main().await;
+        },
+        3 => {
+            adapters::apple::main().await;
+        },
+        _ => {
+            println!("Error: Unknown Source");
         }
     };
     

@@ -28,17 +28,17 @@ pub async fn is_db_up_to_date(name: &str, last_modified: DateTime<Local>) -> Res
             // add a second because of floating point in last_modified
             if db_lm + Duration::seconds(1) > last_modified {
                 // db is up to date
-                return Ok(false);
+                return Ok(true);
             }else {
                 // db is NOT up to date
                 _ = update_known_file(pool, name, last_modified).await;
-                return Ok(true);
+                return Ok(false);
             }
         },
         None => { 
             _ = add_known_file(pool, name, last_modified).await;
             // db is NOT up to date
-            Ok(true)
+            Ok(false)
         }
     }
 }

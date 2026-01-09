@@ -1,45 +1,30 @@
-use chrono::{Local, DateTime};
+use chrono::{DateTime, Local, NaiveDate};
 use sqlx::{MySqlPool, Row};
 
 use crate::database::db::*;
 use crate::models::concept2::*;
 
-pub async fn add_concept2_entry(values: Vec<&str>) {
+pub async fn add_concept2_entries(all_values: Vec<Vec<&str>>) {
     let pool: MySqlPool = match create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
-    let sql = "select log_id from concept2 where log_id = ?";
-    let log_id = sqlx::query(sql)
-        .bind(values[0])
-        .fetch_optional(&pool)
-        .await;
-    let sql = match log_id {
-        Ok(Some(id)) => {
-            let aa: i32 = id.get(0);
-            println!("ID: {}", aa);
-            // update ??
-            "update concept2 set work_date = ?, name = ?, duration_sec = ?, distance = ?, stroke_rate = ?, stroke_count = ?, pace_sec = ?, watts = ? where log_id = ?"
-        },
-        Ok(None) => {
-            // insert
-            "insert into concept2 (work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace_sec, watts, log_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        },
-        Err(e) => {
-            // err
-            panic!("Error: {}", e);
-        }
-    };
-    _ = sqlx::query(sql)
-        .bind(values[1].replace("\"", ""))
-        .bind(values[2].replace("\"", ""))
-        .bind(values[4])
-        .bind(values[7])
-        .bind(values[9])
-        .bind(values[10])
-        .bind(convert_pace(values[11]))
-        .bind(values[12])
-        .bind(values[0]) // like that so that both insert and update work
+    if all_values.len() == 0 {
+        return;
+    }
+
+    let mut query: String = String::from("INSERT INTO concept2 (log_id, work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace_sec, watts) VALUES ");
+
+    for values in all_values {
+        query += &format!("({}, '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}'), ", values[0], values[1].replace("\"", ""), values[2].replace("\"", ""), 
+                                                                                    values[4], values[7], values[9],
+                                                                                    values[10], convert_pace(values[11]), values[12]);
+    }
+    
+    query.truncate(query.len() - 2);
+    query += " AS NEW ON DUPLICATE KEY UPDATE work_date = NEW.work_date;";
+
+    _ = sqlx::query(&query)
         .execute(&pool).await;
 }
 
@@ -50,15 +35,25 @@ fn convert_pace(pace: &str) -> f32 {
     minutes * 60.0 + seconds
 }
 
-pub async fn get_concept2_workouts(workout: &str) -> Vec<Concept2> {
-    let mut all_workouts: Vec<Concept2> = Vec::new();
+pub async fn get_concept2_data(workout: &str, range_start: Option<NaiveDate>, range_end: Option<NaiveDate>) -> Vec<Concept2> {
+    let mut all_data: Vec<Concept2> = Vec::new();
     let pool: MySqlPool = match create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
 
-    let rows_opt = sqlx::query("select * from concept2 where name = ?")
-        .bind(workout)
+    let mut query = format!("SELECT * FROM concept2 WHERE name = '{}'", workout);
+    match range_start {
+        Some(date) => query = format!("{} AND work_date >= '{} 00:00:00'", query, date.format("%Y-%m-%d").to_string()),
+        None => {}
+    };
+    match range_end {
+        Some(date) => query = format!("{} AND work_date <= '{} 00:00:00'", query, date.format("%Y-%m-%d").to_string()),
+        None => {}
+    };
+    query += " ORDER BY work_date ASC;";
+
+    let rows_opt = sqlx::query(&query)
         .fetch_all(&pool)
         .await;
 
@@ -77,12 +72,12 @@ pub async fn get_concept2_workouts(workout: &str) -> Vec<Concept2> {
                 let pace_sec: f32 = row.get("pace_sec");
                 let watts: i32 = row.get("watts");
 
-                all_workouts.push(Concept2::create(log_id, work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace_sec, watts));
+                all_data.push(Concept2::create(log_id, work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace_sec, watts));
             }
         },
         Err(e) => { panic!("Error: {}", e); }
     }
-    return all_workouts;
+    return all_data;
 }
 
 #[allow(dead_code)]

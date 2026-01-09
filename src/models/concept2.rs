@@ -1,6 +1,7 @@
 use chrono::{DateTime, Local, Duration};
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct Concept2 {
     pub log_id: i32,
     pub work_date: DateTime<Local>,

@@ -4,8 +4,6 @@
 // use plotters::prelude::*;
 // use chrono::{DateTime, NaiveDate};
 
-use crate::helper::args;
-
 pub async fn main() {
     // load_data();
     // match args.sport {
@@ -19,7 +17,7 @@ pub async fn main() {
     // }
 }
 
-// fn load_data() {
+pub async fn load_data() {
 //     // put data into DB
 // }
 
@@ -35,7 +33,7 @@ pub async fn main() {
 //             panic!("Error: Unknown Workout");
 //         }
 //     }
-// }
+}
 
 
 

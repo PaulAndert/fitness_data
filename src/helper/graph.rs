@@ -21,7 +21,7 @@ pub async fn graph_duration(destination: String, datapoints: Vec<(NaiveDate, Dur
     root.fill(&WHITE)?;
     let mut chart = ChartBuilder::on(&root)
         .caption(title, ("sans-serif", 50).into_font())
-        .margin(15)
+        .margin(30)
         .x_label_area_size(30)
         .y_label_area_size(30)
         .build_cartesian_2d(x_low..x_high, y_low_bound..y_high_bound)?;
@@ -56,7 +56,7 @@ pub async fn graph_duration(destination: String, datapoints: Vec<(NaiveDate, Dur
         &|c, s, st| {
             return EmptyElement::at(c)
             + Circle::new((0,0),s,st.filled())
-            + Text::new(format!("{:02}: {:02}. {}", y_low_val.num_minutes(), y_low_val.num_seconds() % 60, get_mili_string(y_low_val.num_milliseconds())), (0, -25), ("sans-serif", 25).into_font());
+            + Text::new(format!("{:02}:{:02}.{}", y_high_val.num_minutes(), y_high_val.num_seconds() % 60, get_mili_string(y_high_val.num_milliseconds())), (0, -25), ("sans-serif", 25).into_font());
         },
     ))?;
     // Draw lowest Point
@@ -67,7 +67,7 @@ pub async fn graph_duration(destination: String, datapoints: Vec<(NaiveDate, Dur
         &|c, s, st| {
             return EmptyElement::at(c)
             + Circle::new((0,0),s,st.filled())
-            + Text::new(format!("{:02}: {:02}. {}", y_high_val.num_minutes(), y_high_val.num_seconds() % 60, get_mili_string(y_high_val.num_milliseconds())), (0, 10), ("sans-serif", 25).into_font());
+            + Text::new(format!("{:02}:{:02}.{}", y_low_val.num_minutes(), y_low_val.num_seconds() % 60, get_mili_string(y_low_val.num_milliseconds())), (0, 10), ("sans-serif", 25).into_font());
         },
     ))?;  
     root.present()?;

@@ -1,5 +1,5 @@
 use chrono::NaiveDate;
-use sqlx::{MySqlPool, Row, query};
+use sqlx::{MySqlPool, Row};
 
 use crate::database::db::*;
 use crate::models::fddb::*;
@@ -28,11 +28,8 @@ pub async fn add_fddb_entries(all_values: Vec<Vec<&str>>) {
     query.truncate(query.len() - 2);
     query += " AS NEW ON DUPLICATE KEY UPDATE work_date = NEW.work_date;";
 
-    println!("{}", query);
-
-    let a = sqlx::query(&query)
+    _ = sqlx::query(&query)
         .execute(&pool).await;
-    println!("{:?}", a);
 }
 
 pub async fn get_fddb_data(range_start: Option<NaiveDate>, range_end: Option<NaiveDate>) -> Vec<Fddb> {
@@ -57,7 +54,8 @@ pub async fn get_fddb_data(range_start: Option<NaiveDate>, range_end: Option<Nai
         },
         None => {}
     };
-
+    query += " ORDER BY work_date ASC;";
+    
     let rows_opt = sqlx::query(&query)
         .fetch_all(&pool)
         .await;

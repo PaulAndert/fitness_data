@@ -16,15 +16,11 @@ cargo build
 modify the .env_example to .env and change to values inside to match your environment
 
 ## Usage
-fitness_data [SOURCE] [SPORT] [WORKOUT] [Y-Axis]
 ```terminal
-cargo run -- <Source> <Sport> <Workout> <Y-Axis>
+cargo run
+# or
+./target/debug/fitness_data
 ```
-source: apple, concept, fddb, ...  
-Sport: rowing, walking, ...  
-Workout: min10, min15, meter5000, meter2000, ...  
-Y-Axis: duration, distance, stroke-rate, stroke-count, pace, watts, ... (what value is on this Axis, X-Axis is always time)
-> Fddb can only do one thing, so stating only the source is enough
   
   
 ---

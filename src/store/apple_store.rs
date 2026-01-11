@@ -1,11 +1,11 @@
-use chrono::{DateTime, Local, NaiveDate};
+use chrono::NaiveDate;
 use sqlx::{MySqlPool, Row};
 
 use crate::dto::range::Range;
 use crate::store;
 use crate::dto::apple_record_dto::AppleRecordDto;
 
-pub async fn get_data_daily_kcal_burned(range: Range) -> Vec<(NaiveDate, f32)> {
+pub async fn get_data_daily_sumvalue(record_type: &str, range: Range, source_filter: Option<String>) -> Vec<(NaiveDate, f32)> {
 
     let mut all_data: Vec<(NaiveDate, f32)> = Vec::new();
     let pool: MySqlPool = match store::common_store::create_pool().await {
@@ -13,7 +13,7 @@ pub async fn get_data_daily_kcal_burned(range: Range) -> Vec<(NaiveDate, f32)> {
         Err(e) => { panic!("{}", e); },
     };
 
-    let mut query = String::from("SELECT DATE(datetime_start) AS day, SUM(value) AS total_value FROM apple_records WHERE record_type = 'HKQuantityTypeIdentifierActiveEnergyBurned'");
+    let mut query: String = format!("SELECT DATE(datetime_start) AS day, SUM(value) AS total_value FROM apple_records WHERE record_type = '{}'", record_type);
     match range.start {
         Some(date) => query = format!("{} AND datetime_start >= '{} 00:00:00'", query, date.format("%Y-%m-%d").to_string()),
         None => {}
@@ -22,6 +22,10 @@ pub async fn get_data_daily_kcal_burned(range: Range) -> Vec<(NaiveDate, f32)> {
         Some(date) => query = format!("{} AND datetime_start <= '{} 00:00:00'", query, date.format("%Y-%m-%d").to_string()),
         None => {}
     };
+    match source_filter {
+        Some(source) => query = format!("{} AND source_name <= '{}'", query, source),
+        None => {}
+    }
     query += " GROUP BY DATE(datetime_start) ORDER BY day ASC;";
 
     let rows_opt = sqlx::query(&query)
@@ -39,6 +43,29 @@ pub async fn get_data_daily_kcal_burned(range: Range) -> Vec<(NaiveDate, f32)> {
         Err(e) => { panic!("Error: {}", e); }
     }
 
+    return all_data;
+}
+
+pub async fn get_sources_by_type(record_type: &str) -> Vec<String> {
+    let mut all_data: Vec<String> = Vec::new();
+    let pool: MySqlPool = match store::common_store::create_pool().await {
+        Ok(pool) => { pool },
+        Err(e) => { panic!("{}", e); },
+    };
+
+    let query: String = format!("SELECT DISTINCT source_name FROM apple_records WHERE record_type = '{}';", record_type);
+    let rows_opt = sqlx::query(&query)
+        .fetch_all(&pool)
+        .await;
+    match rows_opt {
+        Ok(rows) => {
+            for row in rows {
+                let source_name: String = row.get("source_name");
+                all_data.push(source_name);
+            }
+        }
+        Err(e) => { panic!("Error: {}", e); }
+    }
     return all_data;
 }
 

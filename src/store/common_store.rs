@@ -15,9 +15,6 @@ pub async fn create_pool() -> Result<MySqlPool, Box<dyn Error>>{
 
 // checks if file already exists, if not, insert it, then check if last_modified value got changed
 pub async fn is_db_up_to_date(name: &str, last_modified: DateTime<Local>) -> Result<bool, Box<dyn Error>>{
-    // TODO 
-    return Ok(false);
-    
     let pool: MySqlPool = match create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },

@@ -12,7 +12,7 @@ use crate::dto::apple_record_dto::AppleRecordDto;
 pub async fn main() {
     let path: &str = &std::env::var("PLOTS_PATH").expect("PLOTS_PATH must be set.");
 
-    let options: Vec<&str> = vec!["daily kcal burn"];
+    let options: Vec<&str> = vec!["daily kcal burn", "daily walking distance (km)"];
     let answer: usize = helper::io_helper::ask_choice_question("What data should be displayed?", options.clone());
 
     let range: Range = helper::io_helper::ask_range();
@@ -24,13 +24,24 @@ pub async fn main() {
     }
 
     let destination = format!("{}/apple_{}.png", path, display_coice.replace(" ", "_"));
-    match answer {
-        1 => {
-            let datapoints: Vec<(NaiveDate, f32)> = store::apple_store::get_data_daily_kcal_burned(range).await;
-            _ = helper::graph::graph_f32(destination, datapoints, title.as_str()).await;
-        },
+    let record_type = match answer {
+        1 => "HKQuantityTypeIdentifierActiveEnergyBurned",
+        2 => "HKQuantityTypeIdentifierDistanceWalkingRunning",
         _ => panic!("The option specified is not valid: {}", answer)
     };
+
+    let mut source_options: Vec<String> = store::apple_store::get_sources_by_type(record_type).await;
+    source_options.insert(0, "No".to_string());
+    let answer: usize = helper::io_helper::ask_choice_question("Shoud the data be filtered by source?", source_options.iter().map(|a| a.as_str()).collect());
+
+    let source_filter: Option<String> = if answer == 1 {
+        None
+    } else {
+        Some(source_options[answer - 1].clone())
+    };
+
+    let datapoints: Vec<(NaiveDate, f32)> = store::apple_store::get_data_daily_sumvalue(record_type, range, source_filter).await;
+    _ = helper::graph::graph_f32(destination, datapoints, title.as_str()).await;
 }
 
 pub async fn load_data() {

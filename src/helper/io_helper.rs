@@ -14,10 +14,15 @@ pub fn ask_choice_question(question: &str, options: Vec<&str>) -> usize {
     let mut user_input = String::new();
     io::stdin().read_line(&mut user_input).expect("error: unable to read user input");
     
-    return match user_input.trim().parse::<usize>() {
+    let number: usize = match user_input.trim().parse::<usize>() {
         Ok(number) => number,
         Err(e) => panic!("{}", e)
     };
+
+    if number == 0 || number > options.len() {
+        panic!("error: {} is not a valid input", number);
+    }
+    return number;
 }
 
 

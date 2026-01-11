@@ -2,7 +2,7 @@ use chrono::{DateTime, Local, Duration};
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
-pub struct Concept2 {
+pub struct Concept2Dto {
     pub log_id: i32,
     pub work_date: DateTime<Local>,
     pub name: String,
@@ -14,9 +14,9 @@ pub struct Concept2 {
     pub watts: i32
 }
 
-impl Concept2 {
+impl Concept2Dto {
     pub fn create(log_id: i32, work_date: DateTime<Local>, name: String, duration_sec: f32,
-            distance: i32, stroke_rate: i32, stroke_count: i32, pace_sec: f32, watts: i32) -> Concept2 {
+            distance: i32, stroke_rate: i32, stroke_count: i32, pace_sec: f32, watts: i32) -> Concept2Dto {
 
         let pace = Duration::seconds(pace_sec as i64);
         pace.checked_add(&Duration::milliseconds((pace_sec * 100.0 % 100.0) as i64)).unwrap();
@@ -24,7 +24,7 @@ impl Concept2 {
         let duration = Duration::seconds(duration_sec as i64);
         duration.checked_add(&Duration::milliseconds((duration_sec * 100.0 % 100.0) as i64)).unwrap();
         
-        return Concept2 { 
+        return Concept2Dto { 
             log_id,
             work_date,
             name,

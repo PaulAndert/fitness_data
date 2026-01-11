@@ -1,11 +1,11 @@
 use chrono::NaiveDate;
 use sqlx::{MySqlPool, Row};
 
-use crate::database::db::*;
-use crate::models::fddb::*;
+use crate::store;
+use crate::dto::fddb_dto::FddbDto;
 
 pub async fn add_fddb_entries(all_values: Vec<Vec<&str>>) {
-    let pool: MySqlPool = match create_pool().await {
+    let pool: MySqlPool = match store::common_store::create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
@@ -32,9 +32,9 @@ pub async fn add_fddb_entries(all_values: Vec<Vec<&str>>) {
         .execute(&pool).await;
 }
 
-pub async fn get_fddb_data(range_start: Option<NaiveDate>, range_end: Option<NaiveDate>) -> Vec<Fddb> {
-    let mut all_data: Vec<Fddb> = Vec::new();
-    let pool: MySqlPool = match create_pool().await {
+pub async fn get_fddb_data(range_start: Option<NaiveDate>, range_end: Option<NaiveDate>) -> Vec<FddbDto> {
+    let mut all_data: Vec<FddbDto> = Vec::new();
+    let pool: MySqlPool = match store::common_store::create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
@@ -66,7 +66,7 @@ pub async fn get_fddb_data(range_start: Option<NaiveDate>, range_end: Option<Nai
                 let work_date: NaiveDate = row.get("work_date");
                 let weight: f32 = row.get("weight");
 
-                all_data.push(Fddb::create(work_date, weight));
+                all_data.push(FddbDto::create(work_date, weight));
             }
         },
         Err(e) => { panic!("Error: {}", e); }
@@ -76,7 +76,7 @@ pub async fn get_fddb_data(range_start: Option<NaiveDate>, range_end: Option<Nai
 
 #[allow(dead_code)]
 pub async fn reset_fddb() {
-    let pool: MySqlPool = match create_pool().await {
+    let pool: MySqlPool = match store::common_store::create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };

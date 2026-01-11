@@ -1,6 +1,5 @@
 use chrono::NaiveDate;
 
-
 #[derive(Debug, Clone)]
 pub struct Range {
     pub start: Option<NaiveDate>,

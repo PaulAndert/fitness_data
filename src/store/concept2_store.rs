@@ -1,11 +1,11 @@
 use chrono::{DateTime, Local, NaiveDate};
 use sqlx::{MySqlPool, Row};
 
-use crate::database::db::*;
-use crate::models::concept2::*;
+use crate::store;
+use crate::dto::concept2_dto::Concept2Dto;
 
 pub async fn add_concept2_entries(all_values: Vec<Vec<&str>>) {
-    let pool: MySqlPool = match create_pool().await {
+    let pool: MySqlPool = match store::common_store::create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
@@ -35,9 +35,9 @@ fn convert_pace(pace: &str) -> f32 {
     minutes * 60.0 + seconds
 }
 
-pub async fn get_concept2_data(workout: &str, range_start: Option<NaiveDate>, range_end: Option<NaiveDate>) -> Vec<Concept2> {
-    let mut all_data: Vec<Concept2> = Vec::new();
-    let pool: MySqlPool = match create_pool().await {
+pub async fn get_concept2_data(workout: &str, range_start: Option<NaiveDate>, range_end: Option<NaiveDate>) -> Vec<Concept2Dto> {
+    let mut all_data: Vec<Concept2Dto> = Vec::new();
+    let pool: MySqlPool = match store::common_store::create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };
@@ -72,7 +72,7 @@ pub async fn get_concept2_data(workout: &str, range_start: Option<NaiveDate>, ra
                 let pace_sec: f32 = row.get("pace_sec");
                 let watts: i32 = row.get("watts");
 
-                all_data.push(Concept2::create(log_id, work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace_sec, watts));
+                all_data.push(Concept2Dto::create(log_id, work_date, name, duration_sec, distance, stroke_rate, stroke_count, pace_sec, watts));
             }
         },
         Err(e) => { panic!("Error: {}", e); }
@@ -82,7 +82,7 @@ pub async fn get_concept2_data(workout: &str, range_start: Option<NaiveDate>, ra
 
 #[allow(dead_code)]
 pub async fn reset_concept2() {
-    let pool: MySqlPool = match create_pool().await {
+    let pool: MySqlPool = match store::common_store::create_pool().await {
         Ok(pool) => { pool },
         Err(e) => { panic!("{}", e); },
     };

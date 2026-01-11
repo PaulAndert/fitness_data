@@ -2,25 +2,22 @@ use core::panic;
 use std::fs;
 use chrono::{Local, DateTime, NaiveDate};
 
-use crate::helper::graph::graph_f32;
-use crate::database::db;
-use crate::database::fddb_db;
-use crate::helper::io_helper::*;
-use crate::models::fddb::Fddb;
-use crate::models::range::Range;
+use crate::helper;
+use crate::store;
+use crate::dto::{fddb_dto::FddbDto, range::Range};
 
 pub async fn main() {
     let path: &str = &std::env::var("PLOTS_PATH").expect("PLOTS_PATH must be set.");
 
-    let range: Range = ask_range();
+    let range: Range = helper::io_helper::ask_range();
     let mut title: String = String::from("Weight Data");
     if range.start.is_some() && range.end.is_some() {
         title = format!("{}: {} - {}", title, range.start.unwrap(), range.end.unwrap());
     }
 
-    let data: Vec<Fddb> = fddb_db::get_fddb_data(range.start, range.end).await;
+    let data: Vec<FddbDto> = store::fddb_store::get_fddb_data(range.start, range.end).await;
     let datapoints: Vec<(NaiveDate, f32)> = convert_data_to_points(data);
-    _ = graph_f32(format!("{}/fddb_weight.png", path), datapoints, &title).await;
+    _ = helper::graph::graph_f32(format!("{}/fddb_weight.png", path), datapoints, &title).await;
 }
 
 pub async fn load_data() {
@@ -50,7 +47,7 @@ pub async fn load_data() {
             Ok(name) => { name },
             Err(e) => { panic!("Error: {:?}", e); },
         };
-        match db::is_db_up_to_date(&filename, last_modified).await {
+        match store::common_store::is_db_up_to_date(&filename, last_modified).await {
             Ok(bool) => { 
                 match bool {
                     true => {}, // skip
@@ -79,9 +76,9 @@ async fn read_file(file: &std::fs::DirEntry) {
         .filter(|line_parts: &Vec<&str>| line_parts.len() > 1)
         .collect();
 
-    fddb_db::add_fddb_entries(all_splited_lines).await;
+    store::fddb_store::add_fddb_entries(all_splited_lines).await;
 }
 
-fn convert_data_to_points(data: Vec<Fddb>) -> Vec<(NaiveDate, f32)> {
+fn convert_data_to_points(data: Vec<FddbDto>) -> Vec<(NaiveDate, f32)> {
     data.iter().map(|item| (item.work_date, item.weight as f32)).collect()
 }

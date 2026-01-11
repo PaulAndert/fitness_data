@@ -1,6 +1,7 @@
 use chrono::{Duration, NaiveDate};
 use plotters::prelude::*;
-use crate::helper::common;
+
+use crate::helper;
 
 pub async fn graph_duration(destination: String, datapoints: Vec<(NaiveDate, Duration)>, title: &str) -> Result<(), Box<dyn std::error::Error>> {
 
@@ -8,10 +9,10 @@ pub async fn graph_duration(destination: String, datapoints: Vec<(NaiveDate, Dur
         panic!("Error: No Datapoints for that Workout");
     }
 
-    let (x_low, x_high) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
+    let (x_low, x_high) = helper::common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
     
-    let (y_low_date, y_low_val): (NaiveDate, Duration) = common::get_y_low::<Duration>(datapoints.clone());
-    let (y_high_date, y_high_val): (NaiveDate, Duration) = common::get_y_high::<Duration>(datapoints.clone());
+    let (y_low_date, y_low_val): (NaiveDate, Duration) = helper::common::get_y_low::<Duration>(datapoints.clone());
+    let (y_high_date, y_high_val): (NaiveDate, Duration) = helper::common::get_y_high::<Duration>(datapoints.clone());
     
     // Add Padding to the Graph
     let y_low_bound = Duration::seconds((y_low_val.num_seconds() as f32 * 0.95) as i64);
@@ -80,10 +81,10 @@ pub async fn graph_f32(destination: String, datapoints: Vec<(NaiveDate, f32)>, t
         panic!("Error: No Datapoints for that Workout");
     }
 
-    let (x_low, x_high): (NaiveDate, NaiveDate) = common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
+    let (x_low, x_high): (NaiveDate, NaiveDate) = helper::common::get_x_low_high(datapoints.iter().map(|item| item.0).collect());
 
-    let (y_low_date, y_low_val): (NaiveDate, f32) = common::get_y_low::<f32>(datapoints.clone());
-    let (y_high_date, y_high_val): (NaiveDate, f32) = common::get_y_high::<f32>(datapoints.clone());
+    let (y_low_date, y_low_val): (NaiveDate, f32) = helper::common::get_y_low::<f32>(datapoints.clone());
+    let (y_high_date, y_high_val): (NaiveDate, f32) = helper::common::get_y_high::<f32>(datapoints.clone());
 
     // Add Padding to the Graph
     let y_low_bound: f32 = y_low_val * 0.95;

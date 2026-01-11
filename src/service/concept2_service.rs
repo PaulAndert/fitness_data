@@ -2,24 +2,20 @@ use std::fs;
 use chrono::Duration;
 use chrono::{Local, DateTime, NaiveDate};
 
-use crate::helper::args::YAxis;
-use crate::helper::graph::{graph_duration, graph_f32};
-use crate::database::concept2_db;
-use crate::database::db;
-use crate::helper::io_helper::*;
-use crate::models::concept2::Concept2;
-use crate::models::range::Range;
+use crate::helper;
+use crate::store;
+use crate::dto::{yaxis::YAxis, concept2_dto::Concept2Dto, range::Range};
 
 pub async fn main() {
     let path: &str = &std::env::var("PLOTS_PATH").expect("PLOTS_PATH must be set.");
 
-    let workout: String = ask_input_question("State the name of the workout to filter. (2000m row, ...)");
+    let workout: String = helper::io_helper::ask_input_question("State the name of the workout to filter. (2000m row, ...)");
 
-    let range: Range = ask_range();
+    let range: Range = helper::io_helper::ask_range();
     let mut title: String = format!("Concept2 Data, {}, ", workout);
 
     let options: Vec<&str> = vec!["duration", "distance", "stroke rate", "stroke count", "pace", "watts"];
-    let answer: usize = ask_choice_question("What data should be displayed on the Y-Axis?", options);
+    let answer: usize = helper::io_helper::ask_choice_question("What data should be displayed on the Y-Axis?", options);
     let y_axis: YAxis = match answer {
         1 => YAxis::Duration,
         2 => YAxis::Distance,
@@ -30,7 +26,7 @@ pub async fn main() {
         _ => panic!("The option specified is not valid: {}", answer)
     };
 
-    let data = concept2_db::get_concept2_data(workout.as_str(), range.start, range.end).await;
+    let data = store::concept2_store::get_concept2_data(workout.as_str(), range.start, range.end).await;
     title += match y_axis {
         YAxis::Duration => "Times in Minutes",
         YAxis::Distance => "Distances in Meters",
@@ -47,12 +43,12 @@ pub async fn main() {
     match y_axis {
         YAxis::Duration | YAxis::Pace => { 
             let datapoints: Vec<(NaiveDate, Duration)> = convert_data_to_points_duration(data, y_axis.clone());
-            _ = graph_duration(destination, datapoints, title.as_str()).await;
+            _ = helper::graph::graph_duration(destination, datapoints, title.as_str()).await;
         },
         YAxis::Distance | YAxis::StrokeRate | 
         YAxis::StrokeCount | YAxis::Watts => {
             let datapoints: Vec<(NaiveDate, f32)> = convert_data_to_points_f32(data, y_axis.clone());
-            _ = graph_f32(destination, datapoints, title.as_str()).await;
+            _ = helper::graph::graph_f32(destination, datapoints, title.as_str()).await;
         }
     }
 }
@@ -84,7 +80,7 @@ pub async fn load_data() {
             Ok(name) => { name },
             Err(e) => { panic!("Error: {:?}", e); },
         };
-        match db::is_db_up_to_date(&filename, last_modified).await {
+        match store::common_store::is_db_up_to_date(&filename, last_modified).await {
             Ok(boo) => { 
                 match boo {
                     true => {}, // skip
@@ -112,10 +108,10 @@ async fn read_file(file: &std::fs::DirEntry) {
         .filter(|line_parts: &Vec<&str>| line_parts.len() > 1)
         .collect();
 
-    concept2_db::add_concept2_entries(all_splited_lines).await;
+    store::concept2_store::add_concept2_entries(all_splited_lines).await;
 }
 
-fn convert_data_to_points_f32(data: Vec<Concept2>, y_axis: YAxis) -> Vec<(NaiveDate, f32)> {
+fn convert_data_to_points_f32(data: Vec<Concept2Dto>, y_axis: YAxis) -> Vec<(NaiveDate, f32)> {
     // Takes a Vec of Cencept2 Structs and returned a Vec of (Date,f32) Tuples
     match y_axis {
         YAxis::Distance => data.iter().map(|item| (item.work_date.date_naive(), item.distance as f32)).collect(),
@@ -126,7 +122,7 @@ fn convert_data_to_points_f32(data: Vec<Concept2>, y_axis: YAxis) -> Vec<(NaiveD
     }
 }
 
-fn convert_data_to_points_duration(data: Vec<Concept2>, y_axis: YAxis) -> Vec<(NaiveDate, Duration)> {
+fn convert_data_to_points_duration(data: Vec<Concept2Dto>, y_axis: YAxis) -> Vec<(NaiveDate, Duration)> {
     // Takes a Vec of Cencept2 Structs and returned a Vec of (Date,Duration) Tuples
     match y_axis {
         YAxis::Duration => data.iter().map(|item| (item.work_date.date_naive(), item.duration)).collect(),

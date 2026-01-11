@@ -29,6 +29,15 @@ CREATE TABLE fddb (
     PRIMARY KEY (work_date)
 );
 
-CREATE TABLE apple_walk (
-    ...
+CREATE TABLE apple_records (
+    log_id int NOT NULL AUTO_INCREMENT,
+    record_type varchar(255),
+    source_name varchar(255),
+    datetime_start timestamp,
+    datetime_end timestamp,
+    value varchar(255),
+    unit varchar(255),
+    PRIMARY KEY (log_id)
 ); 
+
+ALTER TABLE apple_records ADD CONSTRAINT uq_record UNIQUE (record_type, source_name, datetime_start, datetime_end);

@@ -2,9 +2,9 @@ use std::time::Instant;
 use std::env;
 use dotenv::dotenv;
 
-mod adapters; 
-mod database;
-mod models;
+mod service; 
+mod store;
+mod dto;
 mod helper;
 
 #[tokio::main]
@@ -24,12 +24,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let answer: usize = helper::io_helper::ask_choice_question("What source would you like to graph? (1, 2, 3, ...)", options);
 
     match (answer, load_data) {
-        (1, false) => adapters::fddb::main().await,
-        (1, true) => adapters::fddb::load_data().await,
-        (2, false) => adapters::concept2::main().await,
-        (2, true) => adapters::concept2::load_data().await,
-        (3, false) => adapters::apple::main().await,
-        (3, true) => adapters::apple::load_data().await,
+        (1, false) => service::fddb_service::main().await,
+        (1, true) => service::fddb_service::load_data().await,
+        (2, false) => service::concept2_service::main().await,
+        (2, true) => service::concept2_service::load_data().await,
+        (3, false) => service::apple_service::main().await,
+        (3, true) => service::apple_service::load_data().await,
         _ => {
             println!("Error: Unknown Source");
         }

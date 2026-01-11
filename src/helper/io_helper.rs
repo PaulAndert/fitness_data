@@ -1,7 +1,7 @@
 use std::io;
 use chrono::{Days, Local, Months, NaiveDate};
-use crate::models::range::*;
 
+use crate::dto::range::Range;
 
 pub fn ask_choice_question(question: &str, options: Vec<&str>) -> usize {
 

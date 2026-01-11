@@ -1,5 +1,5 @@
 pub mod range;
-pub mod yaxis;
+pub mod yaxis_enum;
 
 pub mod date_time_field_enum;
 

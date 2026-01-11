@@ -101,3 +101,18 @@ pub fn ask_range() -> Range {
         _ => panic!("The option specified is not valid: {}", answer)
     };
 }
+
+pub fn print_progress(text: &str, current: usize, fullsize: usize) {
+    let max_space: usize = get_number_length(fullsize);
+    let current_space: usize = get_number_length(current);
+    let fill: usize = max_space - current_space;
+    println!("\x1b[A{}:\t{}{} / {}", text, " ".repeat(fill), current, fullsize);
+}
+
+fn get_number_length(num: usize) -> usize {
+    if num == 0 {
+        return 1;
+    } else {
+        return num.ilog10() as usize + 1;
+    }
+}

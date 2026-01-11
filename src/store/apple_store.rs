@@ -2,10 +2,10 @@ use chrono::NaiveDate;
 use sqlx::{MySqlPool, Row};
 
 use crate::dto::range::Range;
-use crate::store;
+use crate::{helper, store};
 use crate::dto::apple_record_dto::AppleRecordDto;
 
-pub async fn get_data_daily_sumvalue(record_type: &str, range: Range, source_filter: Option<String>) -> Vec<(NaiveDate, f32)> {
+pub async fn get_data_daily_by_operation(record_type: &str, range: Range, source_filter: Option<String>, operation: &str) -> Vec<(NaiveDate, f32)> {
 
     let mut all_data: Vec<(NaiveDate, f32)> = Vec::new();
     let pool: MySqlPool = match store::common_store::create_pool().await {
@@ -13,7 +13,7 @@ pub async fn get_data_daily_sumvalue(record_type: &str, range: Range, source_fil
         Err(e) => { panic!("{}", e); },
     };
 
-    let mut query: String = format!("SELECT DATE(datetime_start) AS day, SUM(value) AS total_value FROM apple_records WHERE record_type = '{}'", record_type);
+    let mut query: String = format!("SELECT DATE(datetime_start) AS day, {}(CAST(value AS FLOAT)) AS total_value FROM apple_records WHERE record_type = '{}'", operation, record_type);
     match range.start {
         Some(date) => query = format!("{} AND datetime_start >= '{} 00:00:00'", query, date.format("%Y-%m-%d").to_string()),
         None => {}
@@ -78,6 +78,9 @@ pub async fn add_apple_record_entries(records: Vec<AppleRecordDto>) {
     if records.len() == 0 {
         return;
     }
+    println!("\nInsert Data\n");
+    let mut inserts: usize = 0;
+    let max_inserts: usize = records.len();
 
     let query: String = String::from("INSERT IGNORE INTO apple_records (log_id, record_type, source_name, datetime_start, datetime_end, value, unit) VALUES ");
 
@@ -120,10 +123,11 @@ pub async fn add_apple_record_entries(records: Vec<AppleRecordDto>) {
         if transaction_cnt == 1000 {
             transaction_query.truncate(transaction_query.len() - 2);
             transaction_query += ";";
-            let a = sqlx::query(&transaction_query)
+            let result = sqlx::query(&transaction_query)
                 .execute(&pool)
                 .await;
-            println!("{:?}", a);
+            inserts += result.unwrap().rows_affected() as usize;
+            helper::io_helper::print_progress("Inserting", inserts, max_inserts);
             transaction_query = query.clone();
             transaction_cnt = 0;
         }
@@ -132,9 +136,10 @@ pub async fn add_apple_record_entries(records: Vec<AppleRecordDto>) {
     if transaction_cnt != 0 {
         transaction_query.truncate(transaction_query.len() - 2);
         transaction_query += ";";
-        let a = sqlx::query(&transaction_query)
+        let result = sqlx::query(&transaction_query)
             .execute(&pool)
             .await;
-        println!("{:?}", a);
+        inserts += result.unwrap().rows_affected() as usize;
+        helper::io_helper::print_progress("Inserting", inserts, max_inserts);
     }
 }

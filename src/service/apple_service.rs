@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::BufReader;
 use chrono::NaiveDate;
 use xml::reader::{EventReader, XmlEvent};
@@ -12,7 +12,10 @@ use crate::dto::apple_record_dto::AppleRecordDto;
 pub async fn main() {
     let path: &str = &std::env::var("PLOTS_PATH").expect("PLOTS_PATH must be set.");
 
-    let options: Vec<&str> = vec!["daily kcal burn", "daily walking distance (km)"];
+    let options: Vec<&str> = vec!["daily energy burned (kcal)", "daily physical effort (kcal/hr*kg)",
+                                  "daily resting energy burned (kcal)", "daily walking distance (km)",
+                                  "daily step count", "daily time standing (min)", "daily flights climed",
+                                  "daily hearth rate (count/min)", "daily audio exposure (dBASPL)", "daily headphone audio exposure (dBASPL)"];
     let answer: usize = helper::io_helper::ask_choice_question("What data should be displayed?", options.clone());
 
     let range: Range = helper::io_helper::ask_range();
@@ -23,10 +26,28 @@ pub async fn main() {
         title = format!("{}: {} - {}", title, range.start.unwrap(), range.end.unwrap());
     }
 
-    let destination = format!("{}/apple_{}.png", path, display_coice.replace(" ", "_"));
+    let destination = format!("{}/apple_{}.png", path, display_coice.replace(" ", "_").replace("/", "-"));
     let record_type = match answer {
         1 => "HKQuantityTypeIdentifierActiveEnergyBurned",
-        2 => "HKQuantityTypeIdentifierDistanceWalkingRunning",
+        2 => "HKQuantityTypeIdentifierPhysicalEffort",
+        3 => "HKQuantityTypeIdentifierBasalEnergyBurned",
+        4 => "HKQuantityTypeIdentifierDistanceWalkingRunning",
+        5 => "HKQuantityTypeIdentifierStepCount",
+        6 => "HKQuantityTypeIdentifierAppleStandTime",
+        7 => "HKQuantityTypeIdentifierFlightsClimbed",
+        8 => "HKQuantityTypeIdentifierHeartRate",
+        9 => "HKQuantityTypeIdentifierEnvironmentalAudioExposure",
+        10 => "HKQuantityTypeIdentifierHeadphoneAudioExposure",
+        _ => panic!("The option specified is not valid: {}", answer)
+    };
+
+    let options: Vec<&str> = vec!["sum of values", "max value", "min value", "average of values"];
+    let answer: usize = helper::io_helper::ask_choice_question("What data should be displayed?", options.clone());
+    let operation  = match answer {
+        1 => "SUM",
+        2 => "MAX",
+        3 => "MIN",
+        4 => "AVG",
         _ => panic!("The option specified is not valid: {}", answer)
     };
 
@@ -40,7 +61,7 @@ pub async fn main() {
         Some(source_options[answer - 1].clone())
     };
 
-    let datapoints: Vec<(NaiveDate, f32)> = store::apple_store::get_data_daily_sumvalue(record_type, range, source_filter).await;
+    let datapoints: Vec<(NaiveDate, f32)> = store::apple_store::get_data_daily_by_operation(record_type, range, source_filter, operation).await;
     _ = helper::graph::graph_f32(destination, datapoints, title.as_str()).await;
 }
 
@@ -52,11 +73,13 @@ pub async fn load_data() {
             continue;
         }
 
+        println!("Start loading {}\n", name);
+        let content_size: usize = fs::read_to_string(file.path()).expect("Should have been able to read the file").split("\n").count();
+
         let mut records: Vec<AppleRecordDto> = Vec::new();
         let file = BufReader::new(File::open(file.path()).unwrap());
         let mut parser = EventReader::new(file);
         
-        let mut cnt = 0;
         loop {
             match parser.next() {
                 Ok(xml_event) => {
@@ -77,52 +100,52 @@ pub async fn load_data() {
                                         }
                                     }
                                     records.push(apple_record);
-                                    // println!("C M: {} / {}", records.len(), cnt);
                                 },
-                                "Workout" => {
-                                    let mut apple_record: AppleRecordDto = AppleRecordDto::new();
-                                    for attribute in attributes {
-                                        match attribute.name.local_name.as_str() {
-                                            "workoutActivityType" => apple_record.record_type = Some(attribute.value),
-                                            "sourceName" => apple_record.source_name = Some(attribute.value),
-                                            "startDate" => apple_record.set_work_date_from_str(attribute.value.as_str(), DateTimeField::Start).unwrap(),
-                                            "endDate" => apple_record.set_work_date_from_str(attribute.value.as_str(), DateTimeField::End).unwrap(),
-                                            "value" => apple_record.value = Some(attribute.value),
-                                            "unit" => apple_record.unit = Some(attribute.value),
-                                            _ => {}
-                                        }
-                                    }
-                                    records.push(apple_record);
-                                    // println!("C M: {} / {}", records.len(), cnt);
-                                },
+                                "Workout" => {},
                                 _ => {}
                             }
-                            
-                            // if cnt == 5 {
-                            //     break;
-                            // }
-                            cnt += 1;
                         },
-                        // XmlEvent::Characters(text) => {
-                        //     // println!("Text: {}", text);
-                        // },
-                        // XmlEvent::EndElement { name } => {
-                        //     // println!("End: {}", name.local_name);
-                        // },
                         XmlEvent::EndDocument => break,
                         _ => {}
+                    }
+
+                    if records.len() % 1000 == 0 {
+                        helper::io_helper::print_progress("Loading", records.len(), content_size);
                     }
                 },
                 Err(_) => break
             }
         }
 
-        println!("C Ende: {} / {}", records.len(), cnt);
-
+        helper::io_helper::print_progress("Loading", records.len(), content_size);
         store::apple_store::add_apple_record_entries(records).await;
-        // apple_db::add_apple_workout_entries(all_workout_lines).await;
-
-        println!("Loaded {}", name);
+        println!("Finished loading {}", name);
     }
 }
 
+
+// other record types
+// +--------------------------------------------------------+
+// | record_type                                            |
+// +--------------------------------------------------------+
+// | HKQuantityTypeIdentifierWalkingSpeed                   |
+// | HKQuantityTypeIdentifierWalkingStepLength              |
+// | HKQuantityTypeIdentifierWalkingDoubleSupportPercentage |
+// | HKQuantityTypeIdentifierAppleExerciseTime              |
+// | HKCategoryTypeIdentifierAppleStandHour                 |
+// | HKQuantityTypeIdentifierWalkingAsymmetryPercentage     |
+// | HKQuantityTypeIdentifierHeartRateVariabilitySDNN       |
+// | HKQuantityTypeIdentifierStairDescentSpeed              |
+// | HKQuantityTypeIdentifierStairAscentSpeed               |
+// | HKQuantityTypeIdentifierRestingHeartRate               |
+// | HKQuantityTypeIdentifierWalkingHeartRateAverage        |
+// | HKCategoryTypeIdentifierAudioExposureEvent             |
+// | HKQuantityTypeIdentifierAppleWalkingSteadiness         |
+// | HKQuantityTypeIdentifierSixMinuteWalkTestDistance      |
+// | HKQuantityTypeIdentifierVO2Max                         |
+// | HKWorkoutActivityTypeWalking                           |
+// | HKWorkoutActivityTypeRowing                            |
+// | HKQuantityTypeIdentifierHeight                         |
+// | HKQuantityTypeIdentifierBodyMass                       |
+// | HKDataTypeSleepDurationGoal                            |
+// +--------------------------------------------------------+

@@ -45,20 +45,10 @@ cargo run
   
 ---
 ## TODO
-- alle routen auf map visualisieren (Heatmap, ...)
-- all row in diagramm
-- all walk in diagramm
-- all lift in diagramm
-- Hearth beats over a year in a diagramm overlay
-
-##### ROWING
-- ~all 5000 per time~
-- ~all 10min per distance~
-- ~all 15min per distance~
-- multiple datapoints in one graph
-- ~dynamicaly choose (CLI) what the y-axis contains~
-
-##### Walking
-- one map with one date
-- one map with one month
-- one map with all datapoints
+- add descriptions to axis, ex. avg. kcal per day, ...
+- illegal answer - loop question?
+- enter -> answer 1
+- concept2, fddb transaction based machen + print
+- mehr -- optionen: init (db load - execute), reset (drop all tables and danach init), ...
+- one / many routes visualised on a map (Heatmap, ...)
+- Hearth beats over a year in a diagramm overlay?

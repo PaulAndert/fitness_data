@@ -4,7 +4,9 @@ use chrono::{Local, DateTime, NaiveDate};
 
 use crate::helper;
 use crate::store;
-use crate::dto::{yaxis::YAxis, concept2_dto::Concept2Dto, range::Range};
+use crate::dto::yaxis_enum::YAxis;
+use crate::dto::concept2_dto::Concept2Dto;
+use crate::dto::range::Range;
 
 pub async fn main() {
     let path: &str = &std::env::var("PLOTS_PATH").expect("PLOTS_PATH must be set.");
@@ -54,44 +56,10 @@ pub async fn main() {
 }
 
 pub async fn load_data() {
-    // Checks if there is a new file in the Concept2 Folder and if that is the case, 
-    // adds all the data from that File to the DB
     let path: &str = &std::env::var("CONCEPT2_PATH").expect("CONCEPT2_PATH must be set.");
-
-    let dir_list = fs::read_dir(path).unwrap();
-
-    for file_res in dir_list {
-        let file = match file_res {
-            Ok(file) => { file },
-            Err(e) => { panic!("Error: {}", e); },
-        };
-        let metadata = match file.metadata() {
-            Ok(meta) => { meta }
-            Err(e)=> { panic!("Error: {:?}", e); }
-        };
-        let last_modified = match metadata.modified() {
-            Ok(systime) => {
-                let last_modified: DateTime<Local> = systime.clone().into();
-                last_modified
-            },
-            Err(e)=> { panic!("Error: {:?}", e); }
-        };
-        let filename = match file.file_name().into_string() {
-            Ok(name) => { name },
-            Err(e) => { panic!("Error: {:?}", e); },
-        };
-        match store::common_store::is_db_up_to_date(&filename, last_modified).await {
-            Ok(boo) => { 
-                match boo {
-                    true => {}, // skip
-                    false => {  // read new data
-                        read_file(&file).await;
-                        println!("Loaded {}", filename);
-                    },
-                }    
-            },
-            Err(e) => { panic!("Error: {:?}", e); },
-        };
+    for (name, file) in helper::files::search_new_files(path, ".csv").await {
+        read_file(&file).await;
+        println!("Loaded {}", name);
     }
 }
 

@@ -21,44 +21,10 @@ pub async fn main() {
 }
 
 pub async fn load_data() {
-    // Checks if there is a new file in the fddb Folder and if that is the case, 
-    // adds all the data from that File to the DB
     let path: &str = &std::env::var("FDDB_PATH").expect("FDDB_PATH must be set.");
-
-    let dir_list = fs::read_dir(path).unwrap();
-
-    for file_res in dir_list {
-        let file = match file_res {
-            Ok(file) => { file },
-            Err(e) => { panic!("Error: {}", e); },
-        };
-        let metadata = match file.metadata() {
-            Ok(meta) => { meta }
-            Err(e)=> { panic!("Error: {:?}", e); }
-        };
-        let last_modified = match metadata.modified() {
-            Ok(systime) => {
-                let last_modified: DateTime<Local> = systime.clone().into();
-                last_modified
-            },
-            Err(e)=> { panic!("Error: {:?}", e); }
-        };
-        let filename = match file.file_name().into_string() {
-            Ok(name) => { name },
-            Err(e) => { panic!("Error: {:?}", e); },
-        };
-        match store::common_store::is_db_up_to_date(&filename, last_modified).await {
-            Ok(bool) => { 
-                match bool {
-                    true => {}, // skip
-                    false => {  // read new data
-                        read_file(&file).await;
-                        println!("Loaded {}", filename);
-                    },
-                }    
-            },
-            Err(e) => { panic!("Error: {:?}", e); },
-        };
+        for (name, file) in helper::files::search_new_files(path, ".csv").await {
+        read_file(&file).await;
+        println!("Loaded {}", name);
     }
 }
 

@@ -1,5 +1,5 @@
 
-#[derive(clap::ValueEnum, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum YAxis {
     Duration,
     Distance,
